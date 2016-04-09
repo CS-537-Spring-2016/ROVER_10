@@ -46,8 +46,8 @@ public class SwarmServer {
     private static final int PORT = 9537; // because ... class number
 
     // TODO - these should actually be loaded from a file along with the map
-    private static int mapWidth = 30;
-    private static int mapHeight = 30;
+    private static int mapWidth = 100;
+    private static int mapHeight = 100;
     private static PlanetMap planetMap = new PlanetMap(mapWidth, mapHeight); 
     private static RoverLocations roverLocations = new RoverLocations();
     private static ScienceLocations scienceLocations = new ScienceLocations();
@@ -72,7 +72,7 @@ public class SwarmServer {
     
  // length of a side of the scan map array !!! must be odd number !!!
     static final int STANDARD_SCANMAP_RANGE = 7;
-    static final int BOOSTED_SCANMAP_RANGE = 9;
+    static final int BOOSTED_SCANMAP_RANGE = 11;
     
     /**
      * The application main method, which just listens on a port and

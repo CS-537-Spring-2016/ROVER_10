@@ -1,6 +1,9 @@
 CS-537 Swarm Rover Project
-Rover functionality:
 
+Rover functionality:
+range extesion,
+radiation
+wheels
 
 Members:
 James Sunthonlap

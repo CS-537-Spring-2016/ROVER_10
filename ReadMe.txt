@@ -17,8 +17,8 @@ manual build process:
 javac -cp ./libs/* -d ./build ./src/common/*.java ./src/controlServer/*.java ./src/enums/*.java ./src/json/*.java ./src/supportTools/*.java ./src/swarmBots/*.java ./src/testUtillities/*.java
 cd build
 jar cvf my.jar *
+move my.jar ../
 cd ..
-cp build/my.jar my.jar
 to run (with example rover 00):
 java -cp my.jar;./libs/* controlServer.SwarmServer
 java -cp my.jar;./libs/* swarmBots.ROVER_00

@@ -27,6 +27,7 @@ public class R2rApp {
 //		System.out.println("rover 99's connected peers...");
 		rover99.displayList();
 		rover10.sendMessage(1, "ROVER hello rover 00");
-		rover00.sendMessage(1, "ROVER oh hello rover 10!");
+		rover00.sendMessage(1, "ROVER oh hello rover 10 from rover 00!");
+		rover99.sendMessage(1, "ROVER hello rover 10 from rover 99!");
 	}
 }

@@ -7,9 +7,9 @@
 * Priyank Patel
 
 ##Rover Responsibilities:
-Range Extension
-Radiation Gathering
-Wheels
+* Range Extension
+* Radiation Gathering
+* Wheels
 
 ##Group Responsiblities
 upload a executable .jar of our Rover  by every Friday to CSNS
@@ -29,4 +29,4 @@ upload a executable .jar of our Rover  by every Friday to CSNS
 * java -cp ROVER_10.jar;./libs/* swarmBots.ROVER_10
 
 ##Search method
-greedy search algorithm: for each possible move, look at how many tiles will be revealed. take the largest possible number; if all things are equal, move in the direction of the objective.
+* greedy search algorithm: for each possible move, look at how many tiles will be revealed. take the largest possible number; if all things are equal, move in the direction of the objective.

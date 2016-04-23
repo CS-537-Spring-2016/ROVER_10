@@ -1,4 +1,4 @@
-CS-537 Swarm Rover Project
+#CS-537 Swarm Rover Project
 
 Rover functionality:
 range extesion,

@@ -66,6 +66,7 @@ public class ROVER_10 {
 			System.out.println("ROVER_10 rover object constructed");
 			rovername = "ROVER_10";
 			SERVER_ADDRESS = "localhost";
+			sleepTime = 300;
 			this.listenPort = RoverListenPorts.getEnum(roverName).getPort();
 		}
 		

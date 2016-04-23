@@ -385,7 +385,8 @@ public class ROVER_10 {
 					// (scanMap may be old data by now)
 					if (scanMapTiles[centerIndex][centerIndex + 1].getHasRover()
 							|| scanMapTiles[centerIndex][centerIndex + 1].getTerrain() == Terrain.ROCK
-							|| scanMapTiles[centerIndex][centerIndex + 1].getTerrain() == Terrain.NONE) {
+							|| scanMapTiles[centerIndex][centerIndex + 1].getTerrain() == Terrain.NONE
+							|| scanMapTiles[centerIndex][centerIndex + 1].getTerrain() == Terrain.SAND) {
 						blocked = true;
 					} else {
 						// request to server to move
@@ -405,7 +406,8 @@ public class ROVER_10 {
 
 					if (scanMapTiles[centerIndex][centerIndex - 1].getHasRover()
 							|| scanMapTiles[centerIndex][centerIndex - 1].getTerrain() == Terrain.ROCK
-							|| scanMapTiles[centerIndex][centerIndex - 1].getTerrain() == Terrain.NONE) {
+							|| scanMapTiles[centerIndex][centerIndex - 1].getTerrain() == Terrain.NONE
+							|| scanMapTiles[centerIndex][centerIndex + 1].getTerrain() == Terrain.SAND) {
 						blocked = true;
 					} else {
 						// request to server to move

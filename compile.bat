@@ -1,5 +1,6 @@
 javac -cp ./libs/* -d ./build ./src/common/*.java ./src/controlServer/*.java ./src/enums/*.java ./src/json/*.java ./src/supportTools/*.java ./src/swarmBots/*.java ./src/testRoverComm/*.java ./src/testUtillities/*.java
-xcopy libs build\libs /y
+pause
+xcopy libs build/libs /y
 cd build
 jar xf ../libs/commons-lang3-3.4.jar
 jar xf ../libs/gson-2.3.1.jar

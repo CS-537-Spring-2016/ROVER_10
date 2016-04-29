@@ -305,7 +305,7 @@ public class ROVER_10 {
 		}
         // Get target loc.
         out.println("TARGET_LOC");
-        String.line = in.readLine();
+        String line = in.readLine();
         Coord targetLoc = null;
         if(line.startsWith("TARGET_LOC")) {
             targetLoc = extractLOC(line);
@@ -607,11 +607,11 @@ public class ROVER_10 {
 	// returns a Coord object
     public static Coord extractLOC(String sStr) {
         String[] subStrs = sStr.split(" ");
-        if(SubStrs.length > 2) {
-			String xStr = subStrs[SubStrs.length-2];
+        if(subStrs.length > 2) {
+			String xStr = subStrs[subStrs.length-2];
 			// System.out.println("extracted xStr " + xStr);
 
-			String yStr = subStrs[SubStrs.length-1];
+			String yStr = subStrs[subStrs.length-1];
 			// System.out.println("extracted yStr " + yStr);
 			return new Coord(Integer.parseInt(xStr), Integer.parseInt(yStr));
         }

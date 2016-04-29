@@ -15,6 +15,7 @@ LiveMap extends PlanetMap {
         super(width, height, startPos, targetPos); 
         explored = new boolean[width][height][5];
     }
+    //adds a scanmap to the livemap.
     public void addScanMap(ScanMap scan, Coord centerpos, String tool1, String tool2) {
         MapTile[][] mapArray = scan.getScanMap();
         boolean[] mask = new boolean[5];

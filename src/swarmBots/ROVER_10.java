@@ -605,18 +605,6 @@ public class ROVER_10 {
 
 	// this takes the LOC response string, parses out the x and x values and
 	// returns a Coord object
-	public static Coord extractLOC(String sStr) {
-		sStr = sStr.substring(4);
-		if (sStr.lastIndexOf(" ") != -1) {
-			String xStr = sStr.substring(0, sStr.lastIndexOf(" "));
-			// System.out.println("extracted xStr " + xStr);
-
-			String yStr = sStr.substring(sStr.lastIndexOf(" ") + 1);
-			// System.out.println("extracted yStr " + yStr);
-			return new Coord(Integer.parseInt(xStr), Integer.parseInt(yStr));
-		}
-		return null;
-	}
     public static Coord extractLOC(String sStr) {
         String[] subStrs = sStr.split(" ");
         if(SubStrs.length > 2) {

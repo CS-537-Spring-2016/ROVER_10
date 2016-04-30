@@ -1,3 +1,4 @@
+if not exist build mkdir build
 javac -cp ./libs/* -d ./build ./src/common/*.java ./src/controlServer/*.java ./src/enums/*.java ./src/json/*.java ./src/supportTools/*.java ./src/swarmBots/*.java ./src/testRoverComm/*.java ./src/testUtillities/*.java
 pause
 xcopy libs build/libs /y

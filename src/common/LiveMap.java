@@ -26,18 +26,18 @@ public class LiveMap extends PlanetMap {
         mask[4] = tool1 == RoverToolType.RADAR_SENSOR || tool2 == RoverToolType.RADAR_SENSOR ? true : false;
         for(int i = 0; i < mapArray.length; i++) {
             for(int j = 0; j < mapArray[i].length; j++) {
-				//If we're inbounds
-				if(i-(scan.getEdgeSize()/2)+centerpos.xpos >= 0 && j-(scan.getEdgeSize()/2)+centerpos.ypos) {
-					//assumption: there is only ever one type of science on a tile. If not, this can overwrite stuff.
-					for(int m = 0; m < 5; m++) { //mask the explored array with our mask, to show we've covered such and such sensors.
-						explored[i-(scan.getEdgeSize()/2)+centerpos.xpos][j-(scan.getEdgeSize()/2)+centerpos.ypos][m] = mask[m] || explored[i-(scan.getEdgeSize()/2)+centerpos.xpos][j-(scan.getEdgeSize()/2)+centerpos.ypos][m];
-					}
-					//this.planetMap[i-(scan.getEdgeSize()/2)+centerpos.xpos][j-(scan.getEdgeSize()/2)+centerpos.ypos] : the tile at the appropriate position on the LiveMap
-					//if the tile has science on the scanmap, or the tile has no science on the world map
-					if(mapArray[i][j].getScience() != Science.NONE || this.getTile(i-(scan.getEdgeSize()/2)+centerpos.xpos, j-(scan.getEdgeSize()/2)+centerpos.ypos).getScience() == Science.NONE) {
-						this.setTile(mapArray[i][j].getCopyOfMapTile(), i-(scan.getEdgeSize()/2)+centerpos.xpos, j-(scan.getEdgeSize()/2)+centerpos.ypos);
-					}
-				}
+                //If we're inbounds
+                if(i-(scan.getEdgeSize()/2)+centerpos.xpos >= 0 && j-(scan.getEdgeSize()/2)+centerpos.ypos) {
+                    //assumption: there is only ever one type of science on a tile. If not, this can overwrite stuff.
+                    for(int m = 0; m < 5; m++) { //mask the explored array with our mask, to show we've covered such and such sensors.
+                        explored[i-(scan.getEdgeSize()/2)+centerpos.xpos][j-(scan.getEdgeSize()/2)+centerpos.ypos][m] = mask[m] || explored[i-(scan.getEdgeSize()/2)+centerpos.xpos][j-(scan.getEdgeSize()/2)+centerpos.ypos][m];
+                    }
+                    //this.planetMap[i-(scan.getEdgeSize()/2)+centerpos.xpos][j-(scan.getEdgeSize()/2)+centerpos.ypos] : the tile at the appropriate position on the LiveMap
+                    //if the tile has science on the scanmap, or the tile has no science on the world map
+                    if(mapArray[i][j].getScience() != Science.NONE || this.getTile(i-(scan.getEdgeSize()/2)+centerpos.xpos, j-(scan.getEdgeSize()/2)+centerpos.ypos).getScience() == Science.NONE) {
+                        this.setTile(mapArray[i][j].getCopyOfMapTile(), i-(scan.getEdgeSize()/2)+centerpos.xpos, j-(scan.getEdgeSize()/2)+centerpos.ypos);
+                    }
+                }
             }
         }
     }

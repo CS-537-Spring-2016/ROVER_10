@@ -8,12 +8,18 @@ public class LiveMap extends PlanetMap {
         this(1000,1000);//this is a risky assumption, we should be cautious about it.
     }
     public LiveMap(int width, int height) {
-        super(width, height);
-        explored = new boolean[width][height][5];
+        this(width,height,null,null);
     }
     public LiveMap(int width, int height, Coord startPos, Coord targetPos) {
         super(width, height, startPos, targetPos); 
         explored = new boolean[width][height][5];
+        for(int i = 0; i < width; i++) {
+            for(int j = 0; j < height; j++) {
+                for(int k = 0; k < 5; k++) {
+                    explored[i][j][k] = false;
+                }
+            }
+        }
     }
     //adds a scanmap to the livemap.
     public void addScanMap(ScanMap scan, Coord centerpos, RoverToolType tool1, RoverToolType tool2) {
@@ -27,15 +33,14 @@ public class LiveMap extends PlanetMap {
         for(int i = 0; i < mapArray.length; i++) {
             for(int j = 0; j < mapArray[i].length; j++) {
                 //If we're inbounds
-                if(i-(scan.getEdgeSize()/2)+centerpos.xpos >= 0 && j-(scan.getEdgeSize()/2)+centerpos.ypos) {
-                    //assumption: there is only ever one type of science on a tile. If not, this can overwrite stuff.
+                if(i-(scan.getEdgeSize()/2)+centerpos.xpos >= 0 && j-(scan.getEdgeSize()/2)+centerpos.ypos >= 0) {
+                    boolean[] tileExplored = explored[i-(scan.getEdgeSize()/2)+centerpos.xpos][j-(scan.getEdgeSize()/2)+centerpos.ypos];
+                    Science oldScience = this.getTile(i-(scan.getEdgeSize()/2)+centerpos.xpos, j-(scan.getEdgeSize()/2)+centerpos.ypos).getScience();
+                    if((mask[0] && !tileExplored[0]) || mapArray[i][j].getScience() != Science.NONE || (mask[1] && oldScience == Science.RADIOACTIVE) || (mask[2] && oldScience == Science.ORGANIC) || (oldScience == Science.MINERAL) || (mask[4] && oldScience == Science.CRYSTAL)) {
+                        this.setTile(mapArray[i][j].getCopyOfMapTile(), i-(scan.getEdgeSize()/2)+centerpos.xpos, j-(scan.getEdgeSize()/2)+centerpos.ypos);
+                    }
                     for(int m = 0; m < 5; m++) { //mask the explored array with our mask, to show we've covered such and such sensors.
                         explored[i-(scan.getEdgeSize()/2)+centerpos.xpos][j-(scan.getEdgeSize()/2)+centerpos.ypos][m] = mask[m] || explored[i-(scan.getEdgeSize()/2)+centerpos.xpos][j-(scan.getEdgeSize()/2)+centerpos.ypos][m];
-                    }
-                    //this.planetMap[i-(scan.getEdgeSize()/2)+centerpos.xpos][j-(scan.getEdgeSize()/2)+centerpos.ypos] : the tile at the appropriate position on the LiveMap
-                    //if the tile has science on the scanmap, or the tile has no science on the world map
-                    if(mapArray[i][j].getScience() != Science.NONE || this.getTile(i-(scan.getEdgeSize()/2)+centerpos.xpos, j-(scan.getEdgeSize()/2)+centerpos.ypos).getScience() == Science.NONE) {
-                        this.setTile(mapArray[i][j].getCopyOfMapTile(), i-(scan.getEdgeSize()/2)+centerpos.xpos, j-(scan.getEdgeSize()/2)+centerpos.ypos);
                     }
                 }
             }

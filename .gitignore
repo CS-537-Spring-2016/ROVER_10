@@ -1,3 +1,5 @@
 .settings/
 .classpath
 bin/
+ROVER_10.jar
+build/

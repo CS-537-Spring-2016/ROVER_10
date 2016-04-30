@@ -303,10 +303,17 @@ public class ROVER_10 {
 				break;
 			}
 		}
+        // Get target loc.
+        out.println("TARGET_LOC");
+        String line = in.readLine();
+        Coord targetLoc = null;
+        if(line.startsWith("TARGET_LOC")) {
+            targetLoc = extractLOC(line);
+        }
+            
 
 		// ******** Rover logic *********
 		// int cnt=0;
-		String line = "";
 
 		boolean stuck = false; // just means it did not change locations between
 								// requests,
@@ -356,7 +363,8 @@ public class ROVER_10 {
 			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
 			// ***** MOVING *****
 			// BLOCKED...
-			if (blocked) {
+            
+            if (blocked) {
 				switch (currentDir) {
 				case "N":
 					currentDir = resolveNorth(scanMapTiles, centerIndex);
@@ -597,18 +605,18 @@ public class ROVER_10 {
 
 	// this takes the LOC response string, parses out the x and x values and
 	// returns a Coord object
-	public static Coord extractLOC(String sStr) {
-		sStr = sStr.substring(4);
-		if (sStr.lastIndexOf(" ") != -1) {
-			String xStr = sStr.substring(0, sStr.lastIndexOf(" "));
+    public static Coord extractLOC(String sStr) {
+        String[] subStrs = sStr.split(" ");
+        if(subStrs.length > 2) {
+			String xStr = subStrs[subStrs.length-2];
 			// System.out.println("extracted xStr " + xStr);
 
-			String yStr = sStr.substring(sStr.lastIndexOf(" ") + 1);
+			String yStr = subStrs[subStrs.length-1];
 			// System.out.println("extracted yStr " + yStr);
 			return new Coord(Integer.parseInt(xStr), Integer.parseInt(yStr));
-		}
-		return null;
-	}
+        }
+        return null;
+    }
 
 	/**
 	 * Runs the client

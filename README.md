@@ -22,5 +22,5 @@ upload a executable .jar of our Rover by every Friday to CSNS
 * java -cp ROVER_10.jar controlServer.SwarmServer
 * java -jar ROVER_10.jar
 
-##Search method
+##Search methods to try
 * greedy search algorithm: for each possible move, look at how many tiles will be revealed. take the largest possible number; if all things are equal, move in the direction of the objective.

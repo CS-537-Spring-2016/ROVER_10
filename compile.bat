@@ -11,4 +11,5 @@ rmdir META-INF /s /q
 jar cvfm ROVER_10.jar ../jar_manifest.txt *
 move ROVER_10.jar ../
 cd ..
+rmdir build /s /q
 pause

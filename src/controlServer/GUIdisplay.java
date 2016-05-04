@@ -1,16 +1,18 @@
 package controlServer;
 
 
-import java.util.ArrayList;
 import java.util.List;
-import javax.swing.*;
-import javax.swing.text.DefaultCaret;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingWorker;
 
 import common.Coord;
 import common.PlanetMap;
 import common.RoverLocations;
 import common.ScienceLocations;
-import enums.Science;
 import enums.Terrain;
 
 // Thanks to this posting for the seed this was constructed from:

@@ -303,17 +303,10 @@ public class ROVER_10 {
 				break;
 			}
 		}
-        // Get target loc.
-        out.println("TARGET_LOC");
-        String line = in.readLine();
-        Coord targetLoc = null;
-        if(line.startsWith("TARGET_LOC")) {
-            targetLoc = extractLOC(line);
-        }
-            
 
 		// ******** Rover logic *********
 		// int cnt=0;
+		String line = "";
 
 		boolean stuck = false; // just means it did not change locations between
 								// requests,
@@ -363,8 +356,7 @@ public class ROVER_10 {
 			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
 			// ***** MOVING *****
 			// BLOCKED...
-            
-            if (blocked) {
+			if (blocked) {
 				switch (currentDir) {
 				case "N":
 					currentDir = resolveNorth(scanMapTiles, centerIndex);
@@ -509,8 +501,129 @@ public class ROVER_10 {
 				|| scanMapTiles[centerIndex - 1][centerIndex].getTerrain() == Terrain.SAND);
 	}
 	
+	ArrayList<String> radioactiveelementFetch = new ArrayList<String>();
+	ArrayList<String> radioactiveLocation = new ArrayList<String>();
 	
-
+	private void radiation_sensor(String currentCoord,
+			ArrayList<String> radioactiveelementFetch) {
+		// TODO Auto-generated method stub
+		
+		//declaring variables for current x & y , chemical x & y
+		int x_Current=0, y_Current=0, x_Chemical=0, y_Chemical=0;
+		
+		boolean duplicate=false;
+		
+		String radioactiveLocation=null;
+		
+		//extracting the current coordinates and putting into integer variables
+		String[] currentCoordinates = currentCoord.split(" ");
+		x_Current = Integer.parseInt(currentCoordinates[0]);
+		y_Current = Integer.parseInt(currentCoordinates[1]);
+		
+		// iterating the radioactiveelementFetch array list for all the radioactive locations
+		for(String s:radioactiveelementFetch){
+			//extracting the radioactive coordinates and putting into integer variables
+			String[] radioactiveCoordinates = s.split(" ");
+			x_Chemical = Integer.parseInt(radioactiveCoordinates[0]);
+			y_Chemical = Integer.parseInt(radioactiveCoordinates[1]);
+			
+			// checking the x value of radioactive coordinate in the scan map
+			// least will be 0 and max will 10 while 5 will be median
+			switch(x_Chemical){
+			case 0:
+				x_Chemical=x_Current-5;
+				break;
+			case 1:
+				x_Chemical=x_Current-4;
+				break;
+			case 2:
+				x_Chemical=x_Current-3;
+				break;
+			case 3:
+				x_Chemical=x_Current-2;
+				break;
+			case 4:
+				x_Chemical=x_Current-1;
+				break;
+			case 5:
+				x_Chemical=x_Current;
+				break;
+			case 6:
+				x_Chemical=x_Current+1;
+				break;
+			case 7:
+				x_Chemical=x_Current+2;
+				break;
+			case 8:
+				x_Chemical=x_Current+3;
+				break;
+			case 9:
+				x_Chemical=x_Current+4;
+				break;
+			case 10:
+				x_Chemical=x_Current+5;
+				break;
+			}
+			
+			// checking the y value of radioactive coordinate in the scan map
+			// least will be 0 and max will 10 while 5 will be median
+			switch(y_Chemical){
+			case 0:
+				y_Chemical=y_Current-5;
+				break;
+			case 1:
+				y_Chemical=y_Current-4;
+				break;
+			case 2:
+				y_Chemical=y_Current-3;
+				break;
+			case 3:
+				y_Chemical=y_Current-2;
+				break;
+			case 4:
+				y_Chemical=y_Current-1;
+				break;
+			case 5:
+				y_Chemical=y_Current;
+				break;
+			case 6:
+				y_Chemical=y_Current+1;
+				break;
+			case 7:
+				y_Chemical=y_Current+2;
+				break;
+			case 8:
+				y_Chemical=y_Current+3;
+				break;
+			case 9:
+				y_Chemical=y_Current+4;
+				break;
+			case 10:
+				y_Chemical=y_Current+5;
+				break;
+			}
+			
+			// checking whether coordinates are not negative
+			if(x_Chemical>=0 && y_Chemical>=0){
+				//creating a string form of coordinates to store in arraylist
+				radioactiveLocation=x_Chemical+","+y_Chemical;
+				// iterating through existing coordinates arraylist for duplicates
+				for(String loc:this.radioactiveLocation){
+					if(loc.equals(radioactiveLocation)){
+						duplicate=true;
+						break;
+					}
+						
+				}
+				// adding to arraylist if no duplicates found above
+				if(!duplicate)
+					this.radioactiveLocation.add(radioactiveLocation);
+					duplicate=false;
+			}			
+			
+		}
+		
+	}
 	// ################ Support Methods ###########################
 
 	private void clearReadLineBuffer() throws IOException {
@@ -605,23 +718,23 @@ public class ROVER_10 {
 
 	// this takes the LOC response string, parses out the x and x values and
 	// returns a Coord object
-    public static Coord extractLOC(String sStr) {
-        String[] subStrs = sStr.split(" ");
-        if(subStrs.length > 2) {
-			String xStr = subStrs[subStrs.length-2];
+	public static Coord extractLOC(String sStr) {
+		sStr = sStr.substring(4);
+		if (sStr.lastIndexOf(" ") != -1) {
+			String xStr = sStr.substring(0, sStr.lastIndexOf(" "));
 			// System.out.println("extracted xStr " + xStr);
 
-			String yStr = subStrs[subStrs.length-1];
+			String yStr = sStr.substring(sStr.lastIndexOf(" ") + 1);
 			// System.out.println("extracted yStr " + yStr);
 			return new Coord(Integer.parseInt(xStr), Integer.parseInt(yStr));
-        }
-        return null;
-    }
+		}
+		return null;
+	}
 
 	/**
 	 * Runs the client
 	 */
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws Exception {         
 		ROVER_10 client = new ROVER_10("ROVER_10");
 		client.run();
 		client.startRoverServer();

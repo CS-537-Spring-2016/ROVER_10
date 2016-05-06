@@ -21,6 +21,7 @@ import a_star.AStarMap;
 import a_star.AStarPathFinder;
 import a_star.Mover;
 import a_star.Path;
+import a_star.Path.Step;
 import a_star.PathFinder;
 import a_star.TileBasedMap;
 import common.Coord;
@@ -34,11 +35,7 @@ public class test_a_star {
 	private PathFinder finder; // used to find most efficient route to a
 								// selected target
 	private Path path; // keep track of the last path found
-
-	// let's try to go to this coordinate.
-	private int targetX = 31;
-	private int targetY = 29;
-
+	
 	public static void main(String[] args) throws Exception {
 		new Thread(new Runnable() {
 			@Override
@@ -78,9 +75,6 @@ public class test_a_star {
 		// selected target
 		private Path path; // keep track of the last path found
 
-		// let's try to go to this coordinate.
-		private int targetX = 31;
-		private int targetY = 29;
 		AStarMap aStarMap;
 		// instance vars implemented in p2p branch
 		private int listenPort;
@@ -371,7 +365,7 @@ public class test_a_star {
 			Coord currentLoc = null;
 			Coord previousLoc = null;
 
-			String currentDir = "S";
+//			String currentDir = "S";
 
 			// start Rover controller process
 			while (true) {
@@ -407,7 +401,7 @@ public class test_a_star {
 
 				MapTile[][] scanMapTiles = scanMap.getScanMap();
 				int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
-				int targetIndex = centerIndex + 5;
+				int targetIndex = centerIndex + 2;
 				
 				aStarMap = new AStarMap(scanMapTiles);
 				//11 in arg means depth to search is 11 since our scan range is 11.
@@ -418,58 +412,76 @@ public class test_a_star {
 				 * 
 				 */				
 				Path currentPath = finder.findPath(this, centerIndex, centerIndex, targetIndex, targetIndex);
+//				System.out.println("Waiting for 5 seconds..");
+//				Thread.sleep(5000);
+//				try {
+//					pathOut(currentPath);
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//				
+				List<String> commands = debugSteps(currentPath, centerIndex);
+				printCommands(commands);
+//				System.out.println("Waiting for 5 seconds..");
+//				Thread.sleep(5000);
+				
+				for (String comm: commands) {
+					System.out.println("Sending " + comm + " command to server...");
+					out.println("MOVE " + comm);
+					Thread.sleep(1000);//wait a little
+				}
 				
 				// ***** MOVING *****
-				// BLOCKED...
-				if (blocked) {
-					switch (currentDir) {
-					case "N":
-						currentDir = resolveNorth(scanMapTiles, centerIndex);
-						blocked = false;
-						break;
-					case "S":
-						currentDir = resolveSouth(scanMapTiles, centerIndex);
-						blocked = false;
-						break;
-					case "E":
-						currentDir = resolveEast(scanMapTiles, centerIndex);
-						blocked = false;
-						break;
-					case "W":
-						currentDir = resolveWest(scanMapTiles, centerIndex);
-						blocked = false;//
-						break;
-					}
-				}
-				// NOT BLOCKED...
-				else {
-					// tile S = y + 1; N = y - 1; E = x + 1; W = x - 1
-					if (currentDir.equals("S")) {
-						if (southBlocked(scanMapTiles, centerIndex)) {
-							blocked = true;
-						} else {
-							out.println("MOVE S");
-						}
-					} else if (currentDir.equals("N"))
-						if (northBlocked(scanMapTiles, centerIndex)) {
-							blocked = true;
-						} else {
-							out.println("MOVE N");
-						}
-					else if (currentDir.equals("E")) {
-						if (eastBlocked(scanMapTiles, centerIndex)) {
-							blocked = true;
-						} else {
-							out.println("MOVE E");
-						}
-					} else if (currentDir.equals("W")) {
-						if (westBlocked(scanMapTiles, centerIndex)) {
-							blocked = true;
-						} else {
-							out.println("MOVE W");
-						}
-					}
-				}
+//				// BLOCKED...
+//				if (blocked) {
+//					switch (currentDir) {
+//					case "N":
+//						currentDir = resolveNorth(scanMapTiles, centerIndex);
+//						blocked = false;
+//						break;
+//					case "S":
+//						currentDir = resolveSouth(scanMapTiles, centerIndex);
+//						blocked = false;
+//						break;
+//					case "E":
+//						currentDir = resolveEast(scanMapTiles, centerIndex);
+//						blocked = false;
+//						break;
+//					case "W":
+//						currentDir = resolveWest(scanMapTiles, centerIndex);
+//						blocked = false;//
+//						break;
+//					}
+//				}
+//				// NOT BLOCKED...
+//				else {
+//					// tile S = y + 1; N = y - 1; E = x + 1; W = x - 1
+//					if (currentDir.equals("S")) {
+//						if (southBlocked(scanMapTiles, centerIndex)) {
+//							blocked = true;
+//						} else {
+//							out.println("MOVE S");
+//						}
+//					} else if (currentDir.equals("N"))
+//						if (northBlocked(scanMapTiles, centerIndex)) {
+//							blocked = true;
+//						} else {
+//							out.println("MOVE N");
+//						}
+//					else if (currentDir.equals("E")) {
+//						if (eastBlocked(scanMapTiles, centerIndex)) {
+//							blocked = true;
+//						} else {
+//							out.println("MOVE E");
+//						}
+//					} else if (currentDir.equals("W")) {
+//						if (westBlocked(scanMapTiles, centerIndex)) {
+//							blocked = true;
+//						} else {
+//							out.println("MOVE W");
+//						}
+//					}
+//				}
 
 				out.println("LOC");
 				line = in.readLine();
@@ -801,6 +813,54 @@ public class test_a_star {
 				return new Coord(Integer.parseInt(xStr), Integer.parseInt(yStr));
 			}
 			return null;
+		}
+		
+		//used for debugging purposes
+		private void pathOut(Path path) throws Exception {
+			System.out.println("Sleeping thread to view path steps...");
+			int i = 0;
+			while (i < path.getLength()) {
+				Step step = path.getStep(i);
+				System.out.println("(" + step.getX() + ", " + step.getY() + ")");
+				i++;
+			}
+		}
+		
+		//translate a path into a series of commands that SwarmServer will understand
+		private List<String> debugSteps(Path path, int centerIndex) {
+			List<String> commands = new ArrayList<>();
+			if (path != null && path.getLength() != 0) {
+				int xIndex = centerIndex;
+				int yIndex = centerIndex;
+				int i = 0;
+				while (i < path.getLength()) {
+					
+					Step step = path.getStep(i);					
+					int dx = step.getX() - xIndex;
+					int dy = step.getY() - yIndex;
+					
+					//add horiz direc
+					if (dx == 1) commands.add("E");
+					else if (dx == -1) commands.add("W");
+					
+					//add vertical dir
+					if (dy == 1) commands.add("S");
+					else if (dy == -1) commands.add("N");
+					
+					//reset the currentIndex center
+					xIndex = step.getX();
+					yIndex = step.getY();
+					i++;
+				}
+			}			
+			return commands;
+		}
+		
+		//used for debugging purposes
+		private void printCommands(List<String> commands) {
+			for (String comm: commands) {
+				System.out.println("Command: " + comm);
+			}
 		}
 	}
 }

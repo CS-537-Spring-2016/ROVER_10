@@ -259,7 +259,8 @@ public class SwarmServer {
                     if (input.startsWith("MOVE")){
                     	//System.out.println("SWARM: ------ MOVE ------"); //debug test input parsing
                     	// trim header off of input string
-                    	String dir = input.substring(5);	
+                    	String dir = input.substring(5);
+                    	System.out.println("Server received: " + dir);
                     	
                     	// invoke the doMove method to update the Rover position in the RoverLocations (roverLocations) static object
                     	// this method also returns a Coord with the Rover position after the move attempt.

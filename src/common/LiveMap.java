@@ -57,15 +57,22 @@ public class LiveMap extends PlanetMap {
         mask[2] = tool1 == RoverToolType.CHEMICAL_SENSOR || tool2 == RoverToolType.CHEMICAL_SENSOR ? true : false;
         mask[3] = tool1 == RoverToolType.SPECTRAL_SENSOR || tool2 == RoverToolType.SPECTRAL_SENSOR ? true : false;
         mask[4] = tool1 == RoverToolType.RADAR_SENSOR || tool2 == RoverToolType.RADAR_SENSOR ? true : false;
-        for(int i = 0; i < range; i++) {
-            for(int j = 0; j < range; j++) {
+        for(int i = pos.xpos-(range/2); i <= pos.xpos+(range/2); i++) {
+            for(int j = pos.ypos-(range/2); j <= pos.ypos+(range/2); j++) {
                 for(int k = 0; k < 5; k++) {
-                    if(mask[k] && !explored[i-(range/2)+pos.xpos][j-(range/2)+pos.ypos][k]) {
+                    if(i >= 0 && j >= 0 && mask[k] && !explored[i][j][k]) {
                         result++;
                     }
                 }
             }
         }
         return result;
+    }
+    //"tries" all four cardinal directions and prints out how much would be revealed
+    public void debugPrintRevealCounts(Coord pos, RoverToolType tool1, RoverToolType tool2) {
+        System.out.println("N: " + Integer.toString(this.revealCount(new Coord(pos.xpos, pos.ypos-1), tool1, tool2)));
+        System.out.println("E: " + Integer.toString(this.revealCount(new Coord(pos.xpos+1, pos.ypos), tool1, tool2)));
+        System.out.println("S: " + Integer.toString(this.revealCount(new Coord(pos.xpos, pos.ypos+1), tool1, tool2)));
+        System.out.println("W: " + Integer.toString(this.revealCount(new Coord(pos.xpos-1, pos.ypos), tool1, tool2)));
     }
 }

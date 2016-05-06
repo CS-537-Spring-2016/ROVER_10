@@ -17,8 +17,10 @@ import com.google.gson.reflect.TypeToken;
 import common.Coord;
 import common.MapTile;
 import common.ScanMap;
+import common.LiveMap;
 import enums.RoverListenPorts;
 import enums.Terrain;
+import enums.RoverToolType;
 
 /**
  * The seed that this program is built on is a chat program example found here:
@@ -310,8 +312,15 @@ public class ROVER_10 {
         if(line.startsWith("TARGET_LOC")) {
             targetLoc = extractLOC(line);
         }
-            
-
+        // Get start loc.
+        out.println("START_LOC");
+        line = in.readLine();
+        Coord startLoc = null;
+        if(line.startsWith("TARGET_LOC")) {
+            startLoc = extractLOC(line);
+        }
+        LiveMap live = new LiveMap(1000, 1000, startLoc, targetLoc);
+        
 		// ******** Rover logic *********
 		// int cnt=0;
 
@@ -357,8 +366,10 @@ public class ROVER_10 {
 			// ***** do a SCAN *****
 			// System.out.println("ROVER_10 sending SCAN request");
 			this.doScan();
-			scanMap.debugPrintMap();
-
+			live.addScanMap(scanMap, currentLoc, RoverToolType.RADIATION_SENSOR, RoverToolType.RANGE_BOOTER); //this could probably be dynamic, called from an EQUIPMENT call (at start) and fed through RoverToolType.getEnum(String), but I'm lazy.
+            live.debugPrintRevealCounts(currentLoc, RoverToolType.RADIATION_SENSOR, RoverToolType.RANGE_BOOTER);
+            scanMap.debugPrintMap();
+            
 			MapTile[][] scanMapTiles = scanMap.getScanMap();
 			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
 			// ***** MOVING *****

@@ -13,5 +13,5 @@ package a_star;
  * @author Kevin Glass
  */
 public interface Mover {
-
+	
 }

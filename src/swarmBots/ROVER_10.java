@@ -283,7 +283,7 @@ public class ROVER_10 {
 	/**
 	 * Connects to the swarm server then enters the processing loop.
 	 */
-	private void run() throws IOException, InterruptedException {
+	public void run() throws IOException, InterruptedException {
 
 		// TODO - need to close this socket
 		Socket socket = new Socket(SERVER_ADDRESS, SWARM_SERVER_PORT_ADDRESS);

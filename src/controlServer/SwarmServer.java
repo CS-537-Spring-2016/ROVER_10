@@ -109,9 +109,12 @@ public class SwarmServer {
 		roversAreGO = true;
 		
     	// if a command line argument is included it is used as the map filename
-    	for (String s: args){
-    		mapFileName = s;
-    	}
+		if (args != null) {
+			for (String s: args){
+	    		mapFileName = s;
+	    	}
+		}
+
         System.out.println("The Swarm server is running.");
         ServerSocket listener = new ServerSocket(PORT);
         

@@ -1,5 +1,7 @@
 package common;
 
+import java.util.ArrayList;
+
 public class ScanMap {
 	private MapTile[][] scanArray;
 	private int edgeSize;
@@ -59,7 +61,59 @@ public class ScanMap {
 		for(int k=0;k<edgeSize +2;k++){System.out.print("--");}
 		System.out.print("\n");
 	}
-	
+
+	public ArrayList<String> radioactiveLocations(){
+		String loc=null;
+		ArrayList<String> radioactive = new ArrayList<String>();
+		for(int k=0;k<edgeSize + 2;k++){System.out.print("--");}
+		System.out.print("\n");
+		for(int j= 0; j< edgeSize; j++){
+			System.out.print("| ");
+			for(int i= 0; i< edgeSize; i++){
+				//check and print edge of map has first priority
+				if(scanArray[i][j].getTerrain().toString().equals("NONE")){
+					System.out.print("XX");
+					
+				// next most important - print terrain and/or science locations
+					//terrain and science
+				} else if(!(scanArray[i][j].getTerrain().toString().equals("SOIL"))
+						&& !(scanArray[i][j].getScience().toString().equals("NONE"))){
+					// both terrain and science
+					
+					System.out.print(scanArray[i][j].getTerrain().toString().substring(0,1) + scanArray[i][j].getScience().getSciString());
+					
+					//Note the location of radioactive elements
+					if(!(scanArray[i][j].getScience().toString().equals("NONE"))){
+						//loc=i+" "+j;
+						radioactive.add(i+" "+j);
+					}else{}
+					
+					
+					//Scan just terrain
+				} else if(!(scanArray[i][j].getTerrain().toString().equals("SOIL"))){
+					System.out.print(scanArray[i][j].getTerrain().toString().substring(0,1) + " ");
+					//Scan just science
+				} else if(!(scanArray[i][j].getScience().toString().equals("NONE"))){
+					System.out.print(" " + scanArray[i][j].getScience().getSciString());
+					//Note the location of radioactive elements
+					radioactive.add(i+" "+j);
+					
+				// if still empty check for rovers and print them
+				} else if(scanArray[i][j].getHasRover()){
+					System.out.print("[]");
+					
+				// nothing here so print nothing
+				} else {
+					System.out.print("  ");
+				}
+			}	
+			System.out.print(" |\n");		
+		}
+		for(int k=0;k<edgeSize +2;k++){System.out.print("--");}
+		System.out.print("\n");
+		
+		return radioactive;
+	}
 	public int getEdgeSize(){
 		return edgeSize;
 	}

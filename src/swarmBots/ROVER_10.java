@@ -339,7 +339,8 @@ public class ROVER_10 {
 			// after getting location set previous equal current to be able to
 			// check for stuckness and blocked later
 			previousLoc = currentLoc;
-
+			//getting current location from rover in string
+			String currentCoord=currentLoc.currentCoord();
 			// **** get equipment listing ****
 			ArrayList<String> equipment = new ArrayList<String>();
 			equipment = getEquipment();
@@ -352,6 +353,10 @@ public class ROVER_10 {
 			this.doScan();
 			scanMap.debugPrintMap();
 
+			ArrayList<String> radioactiveFetch = scanMap.radioactiveLocations();
+			
+			// Calculating coordinates and adding the radioactive elements locations to an new arraylist using a function
+			radiation_sensor(currentCoord, radioactiveFetch);
 			MapTile[][] scanMapTiles = scanMap.getScanMap();
 			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
 			// ***** MOVING *****
@@ -504,7 +509,7 @@ public class ROVER_10 {
 	ArrayList<String> radioactiveelementFetch = new ArrayList<String>();
 	ArrayList<String> radioactiveLocation = new ArrayList<String>();
 	
-	private void radiation_sensor(String currentCoord,
+	private void radiation_sensor(String currentLoc,
 			ArrayList<String> radioactiveelementFetch) {
 		// TODO Auto-generated method stub
 		
@@ -516,7 +521,7 @@ public class ROVER_10 {
 		String radioactiveLocation=null;
 		
 		//extracting the current coordinates and putting into integer variables
-		String[] currentCoordinates = currentCoord.split(" ");
+		String[] currentCoordinates = currentLoc.split(" ");
 		x_Current = Integer.parseInt(currentCoordinates[0]);
 		y_Current = Integer.parseInt(currentCoordinates[1]);
 		
@@ -738,6 +743,7 @@ public class ROVER_10 {
 		ROVER_10 client = new ROVER_10("ROVER_10");
 		client.run();
 		client.startRoverServer();
+	
 		String ipAddr = client.getIP();
 		System.out.println("my ip address..." + ipAddr);
 	}

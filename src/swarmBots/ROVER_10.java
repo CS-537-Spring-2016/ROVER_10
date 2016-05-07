@@ -21,6 +21,7 @@ import common.LiveMap;
 import enums.RoverListenPorts;
 import enums.Terrain;
 import enums.RoverToolType;
+import enums.RoverDriveType;
 
 /**
  * The seed that this program is built on is a chat program example found here:
@@ -316,7 +317,7 @@ public class ROVER_10 {
         out.println("START_LOC");
         line = in.readLine();
         Coord startLoc = null;
-        if(line.startsWith("TARGET_LOC")) {
+        if(line.startsWith("START_LOC")) {
             startLoc = extractLOC(line);
         }
         LiveMap live = new LiveMap(1000, 1000, startLoc, targetLoc);
@@ -373,58 +374,10 @@ public class ROVER_10 {
 			MapTile[][] scanMapTiles = scanMap.getScanMap();
 			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
 			// ***** MOVING *****
-			// BLOCKED...
-            
-            if (blocked) {
-				switch (currentDir) {
-				case "N":
-					currentDir = resolveNorth(scanMapTiles, centerIndex);
-					blocked = false;
-					break;
-				case "S":
-					currentDir = resolveSouth(scanMapTiles, centerIndex);
-					blocked = false;
-					break;
-				case "E":
-					currentDir = resolveEast(scanMapTiles, centerIndex);
-					blocked = false;
-					break;
-				case "W":
-					currentDir = resolveWest(scanMapTiles, centerIndex);
-					blocked = false;//
-					break;
-				}
-			}
-			// NOT BLOCKED...
-			else {
-				// tile S = y + 1; N = y - 1; E = x + 1; W = x - 1
-				if (currentDir.equals("S")) {
-					if (southBlocked(scanMapTiles, centerIndex)) {
-						blocked = true;
-					} else {
-						out.println("MOVE S");
-					}
-				} else if (currentDir.equals("N"))
-					if (northBlocked(scanMapTiles, centerIndex)) {
-						blocked = true;
-					} else {
-						out.println("MOVE N");
-					}
-				else if (currentDir.equals("E")) {
-					if (eastBlocked(scanMapTiles, centerIndex)) {
-						blocked = true;
-					} else {
-						out.println("MOVE E");
-					}
-				} else if (currentDir.equals("W")) {
-					if (westBlocked(scanMapTiles, centerIndex)) {
-						blocked = true;
-					} else {
-						out.println("MOVE W");
-					}
-				}
-			}
-
+			char dir = live.findPath(currentLoc, targetLoc, RoverDriveType.WHEELS);
+            if(dir != 'U') {
+                out.println("MOVE " + dir);
+            }
 			out.println("LOC");
 			line = in.readLine();
 			if (line == null) {

@@ -14,7 +14,7 @@ public class R2rApp {
 		String ipAddr = rover10.getIP();
 		System.out.println("my ip address..." + ipAddr);
 		//test if a rover can connect to other rovers and send msg to them
-		rover10.connect(ipAddr, RoverListenPorts.ROVER_00.getPort());
+		rover10.connect(ipAddr, RoverListenPorts.ROVER_11.getPort());
 		
 		//allow some time to connect before showing what rovers rover10 is connected to
 		Thread.sleep(2000);
@@ -22,7 +22,7 @@ public class R2rApp {
 		//by the time rover10 is connceted, rover00 will too, so the list should display
 		rover00.displayList();
 	
-		rover10.connect(ipAddr, RoverListenPorts.ROVER_99.getPort());
+		rover10.connect(ipAddr, RoverListenPorts.ROVER_12.getPort());
 		Thread.sleep(2000);
 //		System.out.println("rover 99's connected peers...");
 		rover99.displayList();

@@ -45,6 +45,7 @@ public class ROVER_10 {
 	private ServerSocket roverServerSocket;
 	private int roverPeerNo;
 	private List<RoverPeer> connectedPeers;
+	private int roverSelfNo;
 
 	public ROVER_10() {
 		// constructor
@@ -177,6 +178,29 @@ public class ROVER_10 {
 	public void connect(String address, int port) {
 		PeerConnector peerConnector = new PeerConnector(address, port);
 		new Thread(peerConnector).start();
+	}
+	
+	public void connectAllRovers() {
+		List<Integer> roverNumbers = new ArrayList<>();
+		List<Integer> roverPorts = new ArrayList<>();
+		
+		for (int i = 10; i < 19; i++) {
+			if (i != roverSelfNo) {
+				roverNumbers.add(i);
+			}
+		}
+		
+		for (RoverPeer peer: connectedPeers) {
+			roverPorts.add(peer.getPort());
+		}
+				
+		for (Integer roverNumber: roverNumbers) {
+			String roverStr = "ROVER_" + roverNumber;
+			int roverListenPort = RoverListenPorts.getEnum(roverStr).getPort();
+			if (!roverPorts.contains(roverListenPort)) {
+				connect(getIP(), roverListenPort);
+			}
+		}
 	}
 
 	// connect to a user (peer) on a different thread
@@ -590,8 +614,8 @@ public class ROVER_10 {
 //		client.run();
 		client.startRoverServer();
 		String ipAddr = client.getIP();
-		client.connect(ipAddr, RoverListenPorts.ROVER_11.getPort());
 		System.out.println("my ip address..." + ipAddr);
+		client.connectAllRovers();
 		Thread.sleep(5000);
 	}
 }

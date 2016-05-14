@@ -4,9 +4,24 @@ import enums.Terrain;
 import enums.RoverToolType;
 import enums.RoverDriveType;
 import java.util.ArrayList;
+import common.Communication;
 public class LiveMap extends PlanetMap {
     protected boolean[][][] explored;
-    public LiveMap() {
+    protected Communication com;
+	private static class MyRunnable implements Runnable {
+		private final Communication com;
+		private final Coord centerpos;
+		private final MapTile[][] mapArray;
+		MyRunnable(final Communication com, final Coord centerpos, final MapTile[][] mapArray) {
+			this.com = com;
+			this.centerpos = centerpos;
+			this.mapArray = mapArray;
+		}
+		public void run() {
+			com.postScanMapTiles(centerpos, mapArray);
+		}
+	}
+	public LiveMap() {
         this(1000,1000);//this is a risky assumption, we should be cautious about it.
     }
     public LiveMap(int width, int height) {
@@ -22,11 +37,14 @@ public class LiveMap extends PlanetMap {
                 }
             }
         }
+		String url = "http://23.251.155.186:3000/api/global";
+		this.com = new Communication(url);
     }
     //adds a scanmap to the livemap.
     public void addScanMap(ScanMap scan, Coord centerpos, RoverToolType tool1, RoverToolType tool2) {
         MapTile[][] mapArray = scan.getScanMap();
-        boolean[] mask = new boolean[5];
+		new Thread(new MyRunnable(com, centerpos, mapArray)).start();
+		boolean[] mask = new boolean[5];
         mask[0] = true;
         mask[1] = tool1 == RoverToolType.RADIATION_SENSOR || tool2 == RoverToolType.RADIATION_SENSOR ?  true : false;
         mask[2] = tool1 == RoverToolType.CHEMICAL_SENSOR || tool2 == RoverToolType.CHEMICAL_SENSOR ? true : false;

@@ -1,24 +1,23 @@
 package swarmBots;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import common.Coord;
 import common.MapTile;
 import common.ScanMap;
-import enums.RoverListenPorts;
+import common.LiveMap;
 import enums.Terrain;
+import enums.RoverToolType;
+import enums.RoverDriveType;
 
 /**
  * The seed that this program is built on is a chat program example found here:
@@ -28,7 +27,6 @@ import enums.Terrain;
 
 public class ROVER_10 {
 
-	// original instance vars
 	BufferedReader in;
 	PrintWriter out;
 	String rovername;
@@ -37,247 +35,14 @@ public class ROVER_10 {
 	String SERVER_ADDRESS = "localhost";
 	static final int SWARM_SERVER_PORT_ADDRESS = 9537;
 
-	// instance vars implemented in p2p branch
-	private int listenPort;
-	private ServerSocket roverServerSocket;
-	private int roverPeerNo;
-	private List<RoverPeer> connectedPeers;
+	ArrayList<String> radioactiveLocations = new ArrayList<String>();
 
 	public ROVER_10() {
-		// constructor
 		System.out.println("ROVER_10 rover object constructed");
 		rovername = "ROVER_10";
 		SERVER_ADDRESS = "localhost";
-		// this should be a safe but slow timer value
-		sleepTime = 300; // in milliseconds - smaller is faster, but the server
-							// will cut connection if it is too small
-	}
-
-	// public ROVER_TEST(String serverAddress) {
-	// // constructor
-	// System.out.println("ROVER_10_TEST rover object constructed");
-	// rovername = "ROVER_10_TEST";
-	// SERVER_ADDRESS = serverAddress;
-	// sleepTime = 200; // in milliseconds - smaller is faster, but the server
-	// // will cut connection if it is too small
-	// }
-
-	public ROVER_10(String roverName) {
-		System.out.println("ROVER_10 rover object constructed");
-		rovername = "ROVER_10";
-		SERVER_ADDRESS = "localhost";
-		sleepTime = 300;
-		this.listenPort = RoverListenPorts.getEnum(roverName).getPort();
-	}
-
-	// ROVER_10_TEST is also a server so it can listen to connects coming
-	// from other Rovers.
-	public void startRoverServer() throws IOException {
-
-		roverPeerNo = 0; // intially 0, since no rovers are connected to it yet.
-		connectedPeers = new ArrayList<RoverPeer>();
-
-		// create the server server socket that is listening on this port
-		roverServerSocket = new ServerSocket(listenPort);
-
-		System.out.println(this.getClass().getSimpleName() + " server started!");
-		System.out.println(this.getClass().getSimpleName() + " is listening on port: " + this.listenPort);
-
-		// "serve" each rover (peer) concurrently
-		new Thread(() -> {
-			while (true) {
-				try {
-					// wait for a peer to connect
-					Socket connectionSocket = roverServerSocket.accept();
-
-					// once there is a connection, serve them
-					new Thread(new RoverPeerHandler(connectionSocket)).start();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}).start();
-
-		// // open "shell" mode
-		// startInput();
-	}
-
-	/**
-	 * open an IO stream for each RoverPeer connected to the host display all
-	 * the messages send to the host rover by the peer rover
-	 */
-	class RoverPeerHandler implements Runnable {
-
-		private Socket roverPeerSocket;
-
-		public RoverPeerHandler(Socket socket) {
-			this.roverPeerSocket = socket;
-		}
-
-		public void run() {
-
-			try {
-				// start input stream
-				BufferedReader input = new BufferedReader(new InputStreamReader(roverPeerSocket.getInputStream()));
-
-				// print all messages send to the host by continuously reading
-				// whatever that is in the input stream
-				while (true) {
-					String clientMsg = input.readLine();
-
-					try {
-
-						// when a client connects to the host, the client will
-						// send the host it's IP and port.
-						// the host will save this information.
-						if (clientMsg.startsWith("listen")) {
-
-							System.out.println("\na client has connected to you");
-							System.out.print("-> ");
-
-							// parse the LISTEN message and return the port.
-							// message will be in the format: "listen <port>"
-							String strPort = clientMsg.split(" ")[1];
-							int port = Integer.parseInt(strPort);
-
-							String host = roverPeerSocket.getInetAddress().getHostAddress();
-
-							// add the client information into an array list
-							RoverPeer peer = new RoverPeer(++roverPeerNo, host, port);
-							connectedPeers.add(peer);
-
-							// all "send" message are display here and its
-							// related information.
-						} else if (clientMsg.startsWith("ROVER")) {
-							clientMsg = clientMsg.substring(5);
-
-							System.out.println(
-									"\nMessage received from " + roverPeerSocket.getInetAddress().getHostAddress());
-							System.out.println("Sender's Port: " + roverPeerSocket.getPort());
-							System.out.println("Message: " + clientMsg + "\n");
-
-							// "->" doesn't display after the user receive a
-							// message
-							System.out.print("-> ");
-						}
-					} catch (Exception e) {
-					}
-
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	// connects to another rover peer socket on a separate thread
-	public void connect(String address, int port) {
-		PeerConnector peerConnector = new PeerConnector(address, port);
-		new Thread(peerConnector).start();
-	}
-
-	// connect to a user (peer) on a different thread
-	// we probably don't need to do it like this but threading is cool
-	public class PeerConnector implements Runnable {
-
-		private String peerHost;
-		private int peerPort;
-		private Socket peerSocket;
-
-		public PeerConnector(String host, int port) {
-			this.peerHost = host;
-			this.peerPort = port;
-		}
-
-		@Override
-		public void run() {
-
-			int attemptCounter = 1;
-			final int MAX_ATTEMPTS = 5;
-			final int SLEEP_TIME = 1000;
-
-			// try to connect but will stop after MAX_ATTEMPTS
-			do {
-				try {
-					peerSocket = new Socket(peerHost, peerPort);
-				} catch (IOException e) {
-					System.out.println("\n### connection failed...attempt: " + attemptCounter++);
-					try {
-						Thread.sleep(SLEEP_TIME);
-					} catch (InterruptedException e1) {
-						e1.printStackTrace();
-					}
-				}
-			} while (peerSocket == null && attemptCounter <= MAX_ATTEMPTS);
-
-			// stop here if fail too many times
-			if (attemptCounter > MAX_ATTEMPTS) {
-				System.out.println("connection was unsuccessful, please try again later");
-				System.out.print("-> ");
-				return;
-			}
-
-			// if reach here then connection was successful
-			// add (save) the socket so they can be use later
-			System.out.println("\nyou connected to the client ...");
-			System.out.print("-> ");
-			connectedPeers.add(new RoverPeer(++roverPeerNo, peerHost, peerPort));
-
-			// tell the rover your host address and port number
-			try {
-				DataOutputStream dos = new DataOutputStream(peerSocket.getOutputStream());
-				dos.writeBytes("listen " + listenPort + "\r\n");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	public void displayList() {
-		if (connectedPeers.isEmpty() || connectedPeers == null)
-			System.out.println("No peers connected.");
-		else {
-			System.out.println("id:   IP Address     Port No.");
-			for (RoverPeer p : connectedPeers) {
-				System.out.println(p.getId() + "    " + p.getHost() + "     " + p.getPort());
-			}
-			System.out.println("Total Peers: " + connectedPeers.size());
-		}
-	}
-
-	public String getIP() {
-		String hostAddress = null;
-		try {
-			hostAddress = InetAddress.getLocalHost().getHostAddress();
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
-		return hostAddress;
-	}
-
-	/**
-	 * Send a message to some specific rover
-	 * 
-	 * @param id
-	 *            id of the rover in connectedPeers
-	 * @param message
-	 *            The message you want to send to the other rover..
-	 */
-	public void sendMessage(int id, String message) {
-		try {
-			for (RoverPeer p : connectedPeers) {
-				if (p.getId() == id) {
-					// "\r\n" so when readLine() is called,
-					// it knows when to stop
-					System.out.println("Rover connected on port: " + p.getPort() + " found.");
-
-					p.getOutput().writeBytes(message + "\r\n");
-				} else {
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		// in milliseconds - smaller is faster, but the server will cut connection if too small
+		sleepTime = 300; 
 	}
 
 	/**
@@ -285,40 +50,45 @@ public class ROVER_10 {
 	 */
 	private void run() throws IOException, InterruptedException {
 
-		// TODO - need to close this socket
 		Socket socket = new Socket(SERVER_ADDRESS, SWARM_SERVER_PORT_ADDRESS);
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		out = new PrintWriter(socket.getOutputStream(), true);
 
-		// Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-		// Process all messages from server, wait until server requests Rover ID
-		// name
 		while (true) {
 			String line = in.readLine();
 			if (line.startsWith("SUBMITNAME")) {
-				out.println(rovername); // This sets the name of this instance
-										// of a swarmBot for identifying the
-										// thread to the server
+				out.println(rovername); 
 				break;
 			}
 		}
 
+		out.println("TARGET_LOC");
+		String line = in.readLine();
+		Coord targetLoc = null;
+		if (line.startsWith("TARGET_LOC")) {
+			targetLoc = extractLOC(line);
+		}
+		
+		// Get start loc.
+		out.println("START_LOC");
+		line = in.readLine();
+		Coord startLoc = null;
+		
+		if (line.startsWith("START_LOC")) {
+			startLoc = extractLOC(line);
+		}
+		
+		LiveMap live = new LiveMap(1000, 1000, startLoc, targetLoc);
+
 		// ******** Rover logic *********
 		// int cnt=0;
-		String line = "";
 
-		boolean stuck = false; // just means it did not change locations between
-								// requests,
-								// could be velocity limit or obstruction etc.
+		boolean stuck = false;
 		boolean blocked = false;
 
 		// start moving south
-
 		Coord currentLoc = null;
 		Coord previousLoc = null;
-
-		String currentDir = "S";
 
 		// start Rover controller process
 		while (true) {
@@ -339,78 +109,33 @@ public class ROVER_10 {
 			// after getting location set previous equal current to be able to
 			// check for stuckness and blocked later
 			previousLoc = currentLoc;
-			//getting current location from rover in string
-			String currentCoord=currentLoc.currentCoord();
+
 			// **** get equipment listing ****
 			ArrayList<String> equipment = new ArrayList<String>();
 			equipment = getEquipment();
-			// System.out.println("ROVER_10 equipment list results drive " +
-			// equipment.get(0));
 			System.out.println("ROVER_10 equipment list results " + equipment + "\n");
 
 			// ***** do a SCAN *****
 			// System.out.println("ROVER_10 sending SCAN request");
 			this.doScan();
+			// could probably be dynamic, called from an EQUIPMENT call (at start) and fed through RoverToolType.getEnum(String),  but I'm lazy.
+			live.addScanMap(scanMap, currentLoc, RoverToolType.RADIATION_SENSOR, RoverToolType.RANGE_BOOTER); // this																										
+			live.debugPrintRevealCounts(currentLoc, RoverToolType.RADIATION_SENSOR, RoverToolType.RANGE_BOOTER);
 			scanMap.debugPrintMap();
-
-			ArrayList<String> radioactiveFetch = scanMap.radioactiveLocations();
 			
-			// Calculating coordinates and adding the radioactive elements locations to an new arraylist using a function
-			radiation_sensor(currentCoord, radioactiveFetch);
+			// Calculating coordinates and adding the radioactive elements
+			// locations to an new arraylist using a function
+			ArrayList<String> radioactiveFetch = scanMap.radioactiveLocations();
+			radiation_sensor(currentLoc.currentCoord(), radioactiveFetch);
+			viewRadioactives(this.radioactiveLocations);
+			
 			MapTile[][] scanMapTiles = scanMap.getScanMap();
 			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
 			// ***** MOVING *****
-			// BLOCKED...
-			if (blocked) {
-				switch (currentDir) {
-				case "N":
-					currentDir = resolveNorth(scanMapTiles, centerIndex);
-					blocked = false;
-					break;
-				case "S":
-					currentDir = resolveSouth(scanMapTiles, centerIndex);
-					blocked = false;
-					break;
-				case "E":
-					currentDir = resolveEast(scanMapTiles, centerIndex);
-					blocked = false;
-					break;
-				case "W":
-					currentDir = resolveWest(scanMapTiles, centerIndex);
-					blocked = false;//
-					break;
-				}
+			char dir = live.findPath(currentLoc, targetLoc, RoverDriveType.WHEELS);
+			if (dir != 'U') {
+				out.println("MOVE " + dir);
 			}
-			// NOT BLOCKED...
-			else {
-				// tile S = y + 1; N = y - 1; E = x + 1; W = x - 1
-				if (currentDir.equals("S")) {
-					if (southBlocked(scanMapTiles, centerIndex)) {
-						blocked = true;
-					} else {
-						out.println("MOVE S");
-					}
-				} else if (currentDir.equals("N"))
-					if (northBlocked(scanMapTiles, centerIndex)) {
-						blocked = true;
-					} else {
-						out.println("MOVE N");
-					}
-				else if (currentDir.equals("E")) {
-					if (eastBlocked(scanMapTiles, centerIndex)) {
-						blocked = true;
-					} else {
-						out.println("MOVE E");
-					}
-				} else if (currentDir.equals("W")) {
-					if (westBlocked(scanMapTiles, centerIndex)) {
-						blocked = true;
-					} else {
-						out.println("MOVE W");
-					}
-				}
-			}
-
 			out.println("LOC");
 			line = in.readLine();
 			if (line == null) {
@@ -424,58 +149,130 @@ public class ROVER_10 {
 			stuck = currentLoc.equals(previousLoc);
 
 			System.out.println("ROVER_10 blocked test " + blocked);
-
-			// TODO - logic to calculate where to move next
 			Thread.sleep(sleepTime);
-
 			System.out.println("ROVER_10 ------------ bottom process control --------------");
 		}
 	}
-	
-	//blocked rover helper methods
-	public String resolveNorth(MapTile[][] scanMapTiles, int centerIndex) {
-		String currentDir = "N";
-		if (!eastBlocked(scanMapTiles, centerIndex))
-			currentDir = "E";
-		else if (!westBlocked(scanMapTiles, centerIndex))
-			currentDir = "W";
-		else
-			currentDir = "S";
-		return currentDir;
-	}
 
-	public String resolveSouth(MapTile[][] scanMapTiles, int centerIndex) {
-		String currentDir = "S";
-		if (!eastBlocked(scanMapTiles, centerIndex))
-			currentDir = "E";
-		else if (!westBlocked(scanMapTiles, centerIndex))
-			currentDir = "W";
-		else {
-			currentDir = "N";
+	// populates this.radioactiveLocations w/ loc's of radioactive elements.
+	private void radiation_sensor(String currentLoc, ArrayList<String> radioactiveFetch) {
+
+		// declaring variables for current x & y , chemical x & y
+		int x_Current = 0, y_Current = 0, x_radioactiveelements = 0, y_radioactiveelements = 0;
+
+		boolean duplicate = false;
+
+		String radioactiveLocation = null;
+
+		// extracting the current coordinates and putting into integer variables
+		String[] currentCoordinates = currentLoc.split(" ");
+		x_Current = Integer.parseInt(currentCoordinates[0]);
+		y_Current = Integer.parseInt(currentCoordinates[1]);
+
+		// iterating the radioactiveelementFetch array list for all the
+		// radioactive locations
+		for (String s : radioactiveFetch) {
+			// extracting the radioactive coordinates and putting into integer
+			// variables
+			String[] radioactiveCoordinates = s.split(" ");
+			x_radioactiveelements = Integer.parseInt(radioactiveCoordinates[0]);
+			y_radioactiveelements = Integer.parseInt(radioactiveCoordinates[1]);
+
+			// checking the x value of radioactive coordinate in the scan map
+			// least will be 0 and max will 10 while 5 will be median
+			switch (x_radioactiveelements) {
+			case 0:
+				x_radioactiveelements = x_Current - 5;
+				break;
+			case 1:
+				x_radioactiveelements = x_Current - 4;
+				break;
+			case 2:
+				x_radioactiveelements = x_Current - 3;
+				break;
+			case 3:
+				x_radioactiveelements = x_Current - 2;
+				break;
+			case 4:
+				x_radioactiveelements = x_Current - 1;
+				break;
+			case 5:
+				x_radioactiveelements = x_Current;
+				break;
+			case 6:
+				x_radioactiveelements = x_Current + 1;
+				break;
+			case 7:
+				x_radioactiveelements = x_Current + 2;
+				break;
+			case 8:
+				x_radioactiveelements = x_Current + 3;
+				break;
+			case 9:
+				x_radioactiveelements = x_Current + 4;
+				break;
+			case 10:
+				x_radioactiveelements = x_Current + 5;
+				break;
+			}
+
+			// checking the y value of radioactive coordinate in the scan map
+			// least will be 0 and max will 10 while 5 will be median
+			switch (y_radioactiveelements) {
+			case 0:
+				y_radioactiveelements = y_Current - 5;
+				break;
+			case 1:
+				y_radioactiveelements = y_Current - 4;
+				break;
+			case 2:
+				y_radioactiveelements = y_Current - 3;
+				break;
+			case 3:
+				y_radioactiveelements = y_Current - 2;
+				break;
+			case 4:
+				y_radioactiveelements = y_Current - 1;
+				break;
+			case 5:
+				y_radioactiveelements = y_Current;
+				break;
+			case 6:
+				y_radioactiveelements = y_Current + 1;
+				break;
+			case 7:
+				y_radioactiveelements = y_Current + 2;
+				break;
+			case 8:
+				y_radioactiveelements = y_Current + 3;
+				break;
+			case 9:
+				y_radioactiveelements = y_Current + 4;
+				break;
+			case 10:
+				y_radioactiveelements = y_Current + 5;
+				break;
+			}
+
+			// checking whether coordinates are not negative
+			if (x_radioactiveelements >= 0 && y_radioactiveelements >= 0) {
+				// creating a string form of coordinates to store in arraylist
+				radioactiveLocation = x_radioactiveelements + "," + y_radioactiveelements;
+				// iterating through existing coordinates arraylist for
+				// duplicates
+				for (String loc : this.radioactiveLocations) {
+					if (loc.equals(radioactiveLocation)) {
+						duplicate = true;
+						break;
+					}
+				}
+
+				// adding to arraylist if no duplicates found above
+				if (!duplicate)
+					this.radioactiveLocations.add(radioactiveLocation);
+				duplicate = false;
+			}
 		}
-		return currentDir;
-	}
-
-	public String resolveEast(MapTile[][] scanMapTiles, int centerIndex) {
-		String currentDir = "E";
-		if (!southBlocked(scanMapTiles, centerIndex))
-			currentDir = "S";
-		else if (!northBlocked(scanMapTiles, centerIndex))
-			currentDir = "N";
-		else
-			currentDir = "W";
-		return currentDir;
-	}
-
-	public String resolveWest(MapTile[][] scanMapTiles, int centerIndex) {
-		String currentDir = "W";
-		if (!southBlocked(scanMapTiles, centerIndex))
-			currentDir = "S";
-		else if (!northBlocked(scanMapTiles, centerIndex))
-			currentDir = "N";
-		else
-			currentDir = "E";
-		return currentDir;
 	}
 
 	public boolean northBlocked(MapTile[][] scanMapTiles, int centerIndex) {
@@ -505,132 +302,8 @@ public class ROVER_10 {
 				|| scanMapTiles[centerIndex - 1][centerIndex].getTerrain() == Terrain.NONE
 				|| scanMapTiles[centerIndex - 1][centerIndex].getTerrain() == Terrain.SAND);
 	}
-	
-	ArrayList<String> radioactiveelementFetch = new ArrayList<String>();
-	ArrayList<String> radioactiveLocation = new ArrayList<String>();
-	
-	private void radiation_sensor(String currentLoc,
-			ArrayList<String> radioactiveelementFetch) {
-		// TODO Auto-generated method stub
-		
-		//declaring variables for current x & y , chemical x & y
-		int x_Current=0, y_Current=0, x_radioactiveelements=0, y_radioactiveelements=0;
-		
-		boolean duplicate=false;
-		
-		String radioactiveLocation=null;
-		
-		//extracting the current coordinates and putting into integer variables
-		String[] currentCoordinates = currentLoc.split(" ");
-		x_Current = Integer.parseInt(currentCoordinates[0]);
-		y_Current = Integer.parseInt(currentCoordinates[1]);
-		
-		// iterating the radioactiveelementFetch array list for all the radioactive locations
-		for(String s:radioactiveelementFetch){
-			//extracting the radioactive coordinates and putting into integer variables
-			String[] radioactiveCoordinates = s.split(" ");
-			x_radioactiveelements = Integer.parseInt(radioactiveCoordinates[0]);
-			y_radioactiveelements = Integer.parseInt(radioactiveCoordinates[1]);
-			
-			// checking the x value of radioactive coordinate in the scan map
-			// least will be 0 and max will 10 while 5 will be median
-			switch(x_radioactiveelements){
-			case 0:
-				x_radioactiveelements=x_Current-5;
-				break;
-			case 1:
-				x_radioactiveelements=x_Current-4;
-				break;
-			case 2:
-				x_radioactiveelements=x_Current-3;
-				break;
-			case 3:
-				x_radioactiveelements=x_Current-2;
-				break;
-			case 4:
-				x_radioactiveelements=x_Current-1;
-				break;
-			case 5:
-				x_radioactiveelements=x_Current;
-				break;
-			case 6:
-				x_radioactiveelements=x_Current+1;
-				break;
-			case 7:
-				x_radioactiveelements=x_Current+2;
-				break;
-			case 8:
-				x_radioactiveelements=x_Current+3;
-				break;
-			case 9:
-				x_radioactiveelements=x_Current+4;
-				break;
-			case 10:
-				x_radioactiveelements=x_Current+5;
-				break;
-			}
-			
-			// checking the y value of radioactive coordinate in the scan map
-			// least will be 0 and max will 10 while 5 will be median
-			switch(y_radioactiveelements){
-			case 0:
-				y_radioactiveelements=y_Current-5;
-				break;
-			case 1:
-				y_radioactiveelements=y_Current-4;
-				break;
-			case 2:
-				y_radioactiveelements=y_Current-3;
-				break;
-			case 3:
-				y_radioactiveelements=y_Current-2;
-				break;
-			case 4:
-				y_radioactiveelements=y_Current-1;
-				break;
-			case 5:
-				y_radioactiveelements=y_Current;
-				break;
-			case 6:
-				y_radioactiveelements=y_Current+1;
-				break;
-			case 7:
-				y_radioactiveelements=y_Current+2;
-				break;
-			case 8:
-				y_radioactiveelements=y_Current+3;
-				break;
-			case 9:
-				y_radioactiveelements=y_Current+4;
-				break;
-			case 10:
-				y_radioactiveelements=y_Current+5;
-				break;
-			}
-			
-			// checking whether coordinates are not negative
-			if(x_radioactiveelements>=0 && y_radioactiveelements>=0){
-				//creating a string form of coordinates to store in arraylist
-				radioactiveLocation=x_radioactiveelements+","+y_radioactiveelements;
-				// iterating through existing coordinates arraylist for duplicates
-				for(String loc:this.radioactiveLocation){
-					if(loc.equals(radioactiveLocation)){
-						duplicate=true;
-						break;
-					}
-						
-				}
-				// adding to arraylist if no duplicates found above
-				if(!duplicate)
-					this.radioactiveLocation.add(radioactiveLocation);
-					duplicate=false;
-			}			
-			
-		}
-		
-	}
-	// ################ Support Methods ###########################
 
+	// ################ Support Methods ###########################
 	private void clearReadLineBuffer() throws IOException {
 		while (in.ready()) {
 			// System.out.println("ROVER_10 clearing readLine()");
@@ -724,27 +397,26 @@ public class ROVER_10 {
 	// this takes the LOC response string, parses out the x and x values and
 	// returns a Coord object
 	public static Coord extractLOC(String sStr) {
-		sStr = sStr.substring(4);
-		if (sStr.lastIndexOf(" ") != -1) {
-			String xStr = sStr.substring(0, sStr.lastIndexOf(" "));
+		String[] subStrs = sStr.split(" ");
+		if (subStrs.length > 2) {
+			String xStr = subStrs[subStrs.length - 2];
 			// System.out.println("extracted xStr " + xStr);
 
-			String yStr = sStr.substring(sStr.lastIndexOf(" ") + 1);
+			String yStr = subStrs[subStrs.length - 1];
 			// System.out.println("extracted yStr " + yStr);
 			return new Coord(Integer.parseInt(xStr), Integer.parseInt(yStr));
 		}
 		return null;
 	}
-
-	/**
-	 * Runs the client
-	 */
-	public static void main(String[] args) throws Exception {         
-		ROVER_10 client = new ROVER_10("ROVER_10");
-		client.run();
-		client.startRoverServer();
 	
-		String ipAddr = client.getIP();
-		System.out.println("my ip address..." + ipAddr);
+	private void viewRadioactives(List<String> radioactiveLocations) {
+		for (String location: radioactiveLocations) {
+			System.out.println(location);
+		}
+	}
+
+	public static void main(String[] args) throws Exception {
+		ROVER_10 rover10 = new ROVER_10();
+		rover10.run();
 	}
 }

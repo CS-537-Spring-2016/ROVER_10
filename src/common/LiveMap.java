@@ -143,6 +143,9 @@ public class LiveMap extends PlanetMap {
     }
     public boolean blocked(Coord pos, RoverDriveType drive) {
         Terrain ter = this.getTile(pos).getTerrain();
+        if(ter == Terrain.NONE) {
+            return true;
+        }
         if(ter == Terrain.SAND && drive != RoverDriveType.TREADS) {
             return true;
         }

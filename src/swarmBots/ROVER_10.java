@@ -339,7 +339,8 @@ public class ROVER_10 {
 			// after getting location set previous equal current to be able to
 			// check for stuckness and blocked later
 			previousLoc = currentLoc;
-
+			//getting current location from rover in string
+			String currentCoord=currentLoc.currentCoord();
 			// **** get equipment listing ****
 			ArrayList<String> equipment = new ArrayList<String>();
 			equipment = getEquipment();
@@ -352,6 +353,10 @@ public class ROVER_10 {
 			this.doScan();
 			scanMap.debugPrintMap();
 
+			ArrayList<String> radioactiveFetch = scanMap.radioactiveLocations();
+			
+			// Calculating coordinates and adding the radioactive elements locations to an new arraylist using a function
+			radiation_sensor(currentCoord, radioactiveFetch);
 			MapTile[][] scanMapTiles = scanMap.getScanMap();
 			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
 			// ***** MOVING *****
@@ -504,19 +509,19 @@ public class ROVER_10 {
 	ArrayList<String> radioactiveelementFetch = new ArrayList<String>();
 	ArrayList<String> radioactiveLocation = new ArrayList<String>();
 	
-	private void radiation_sensor(String currentCoord,
+	private void radiation_sensor(String currentLoc,
 			ArrayList<String> radioactiveelementFetch) {
 		// TODO Auto-generated method stub
 		
 		//declaring variables for current x & y , chemical x & y
-		int x_Current=0, y_Current=0, x_Chemical=0, y_Chemical=0;
+		int x_Current=0, y_Current=0, x_radioactiveelements=0, y_radioactiveelements=0;
 		
 		boolean duplicate=false;
 		
 		String radioactiveLocation=null;
 		
 		//extracting the current coordinates and putting into integer variables
-		String[] currentCoordinates = currentCoord.split(" ");
+		String[] currentCoordinates = currentLoc.split(" ");
 		x_Current = Integer.parseInt(currentCoordinates[0]);
 		y_Current = Integer.parseInt(currentCoordinates[1]);
 		
@@ -524,89 +529,89 @@ public class ROVER_10 {
 		for(String s:radioactiveelementFetch){
 			//extracting the radioactive coordinates and putting into integer variables
 			String[] radioactiveCoordinates = s.split(" ");
-			x_Chemical = Integer.parseInt(radioactiveCoordinates[0]);
-			y_Chemical = Integer.parseInt(radioactiveCoordinates[1]);
+			x_radioactiveelements = Integer.parseInt(radioactiveCoordinates[0]);
+			y_radioactiveelements = Integer.parseInt(radioactiveCoordinates[1]);
 			
 			// checking the x value of radioactive coordinate in the scan map
 			// least will be 0 and max will 10 while 5 will be median
-			switch(x_Chemical){
+			switch(x_radioactiveelements){
 			case 0:
-				x_Chemical=x_Current-5;
+				x_radioactiveelements=x_Current-5;
 				break;
 			case 1:
-				x_Chemical=x_Current-4;
+				x_radioactiveelements=x_Current-4;
 				break;
 			case 2:
-				x_Chemical=x_Current-3;
+				x_radioactiveelements=x_Current-3;
 				break;
 			case 3:
-				x_Chemical=x_Current-2;
+				x_radioactiveelements=x_Current-2;
 				break;
 			case 4:
-				x_Chemical=x_Current-1;
+				x_radioactiveelements=x_Current-1;
 				break;
 			case 5:
-				x_Chemical=x_Current;
+				x_radioactiveelements=x_Current;
 				break;
 			case 6:
-				x_Chemical=x_Current+1;
+				x_radioactiveelements=x_Current+1;
 				break;
 			case 7:
-				x_Chemical=x_Current+2;
+				x_radioactiveelements=x_Current+2;
 				break;
 			case 8:
-				x_Chemical=x_Current+3;
+				x_radioactiveelements=x_Current+3;
 				break;
 			case 9:
-				x_Chemical=x_Current+4;
+				x_radioactiveelements=x_Current+4;
 				break;
 			case 10:
-				x_Chemical=x_Current+5;
+				x_radioactiveelements=x_Current+5;
 				break;
 			}
 			
 			// checking the y value of radioactive coordinate in the scan map
 			// least will be 0 and max will 10 while 5 will be median
-			switch(y_Chemical){
+			switch(y_radioactiveelements){
 			case 0:
-				y_Chemical=y_Current-5;
+				y_radioactiveelements=y_Current-5;
 				break;
 			case 1:
-				y_Chemical=y_Current-4;
+				y_radioactiveelements=y_Current-4;
 				break;
 			case 2:
-				y_Chemical=y_Current-3;
+				y_radioactiveelements=y_Current-3;
 				break;
 			case 3:
-				y_Chemical=y_Current-2;
+				y_radioactiveelements=y_Current-2;
 				break;
 			case 4:
-				y_Chemical=y_Current-1;
+				y_radioactiveelements=y_Current-1;
 				break;
 			case 5:
-				y_Chemical=y_Current;
+				y_radioactiveelements=y_Current;
 				break;
 			case 6:
-				y_Chemical=y_Current+1;
+				y_radioactiveelements=y_Current+1;
 				break;
 			case 7:
-				y_Chemical=y_Current+2;
+				y_radioactiveelements=y_Current+2;
 				break;
 			case 8:
-				y_Chemical=y_Current+3;
+				y_radioactiveelements=y_Current+3;
 				break;
 			case 9:
-				y_Chemical=y_Current+4;
+				y_radioactiveelements=y_Current+4;
 				break;
 			case 10:
-				y_Chemical=y_Current+5;
+				y_radioactiveelements=y_Current+5;
 				break;
 			}
 			
 			// checking whether coordinates are not negative
-			if(x_Chemical>=0 && y_Chemical>=0){
+			if(x_radioactiveelements>=0 && y_radioactiveelements>=0){
 				//creating a string form of coordinates to store in arraylist
-				radioactiveLocation=x_Chemical+","+y_Chemical;
+				radioactiveLocation=x_radioactiveelements+","+y_radioactiveelements;
 				// iterating through existing coordinates arraylist for duplicates
 				for(String loc:this.radioactiveLocation){
 					if(loc.equals(radioactiveLocation)){
@@ -738,6 +743,7 @@ public class ROVER_10 {
 		ROVER_10 client = new ROVER_10("ROVER_10");
 		client.run();
 		client.startRoverServer();
+	
 		String ipAddr = client.getIP();
 		System.out.println("my ip address..." + ipAddr);
 	}

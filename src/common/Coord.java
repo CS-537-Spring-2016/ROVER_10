@@ -18,6 +18,9 @@ public class Coord {
 		this.xpos = x;
 		this.ypos = y;
 	}
+	public String currentCoord(){
+		return xpos+" "+ypos;
+	}
 	
     @Override
     public int hashCode() {

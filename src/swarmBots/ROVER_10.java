@@ -127,8 +127,8 @@ public class ROVER_10 {
 			// locations to an new arraylist using a function
 			ArrayList<String> radioactiveFetch = scanMap.radioactiveLocations();
 			radiation_sensor(currentLoc.currentCoord(), radioactiveFetch);
-			viewRadioactives(this.radioactiveLocations);
-//			List<Coord> radioActCoords = radListToCoords(this.radioactiveLocations);
+			List<Coord> radioActCoords = radListToCoords(this.radioactiveLocations);
+						
 			MapTile[][] scanMapTiles = scanMap.getScanMap();
 			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
 			// ***** MOVING *****

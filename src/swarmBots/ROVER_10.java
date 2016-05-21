@@ -128,7 +128,7 @@ public class ROVER_10 {
 			ArrayList<String> radioactiveFetch = scanMap.radioactiveLocations();
 			radiation_sensor(currentLoc.currentCoord(), radioactiveFetch);
 			viewRadioactives(this.radioactiveLocations);
-			
+//			List<Coord> radioActCoords = radListToCoords(this.radioactiveLocations);
 			MapTile[][] scanMapTiles = scanMap.getScanMap();
 			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
 			// ***** MOVING *****
@@ -407,6 +407,18 @@ public class ROVER_10 {
 			return new Coord(Integer.parseInt(xStr), Integer.parseInt(yStr));
 		}
 		return null;
+	}
+	private List<Coord> radListToCoords(List<String> radioactiveLocations) {
+		List<Coord> radioActCoords = new ArrayList<>();
+		
+		if (radioactiveLocations != null && !radioactiveLocations.isEmpty()) {
+			for (String loc : radioactiveLocations) {
+				String[] coordArr = loc.split(",");
+				Coord coord = new Coord(Integer.valueOf(coordArr[0]), Integer.valueOf(coordArr[1]));				
+				radioActCoords.add(coord);
+			}
+		}		
+		return radioActCoords;
 	}
 	
 	private void viewRadioactives(List<String> radioactiveLocations) {

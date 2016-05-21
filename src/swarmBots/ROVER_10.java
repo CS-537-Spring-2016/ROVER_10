@@ -275,34 +275,6 @@ public class ROVER_10 {
 		}
 	}
 
-	public boolean northBlocked(MapTile[][] scanMapTiles, int centerIndex) {
-		return (scanMapTiles[centerIndex][centerIndex - 1].getHasRover()
-				|| scanMapTiles[centerIndex][centerIndex - 1].getTerrain() == Terrain.ROCK
-				|| scanMapTiles[centerIndex][centerIndex - 1].getTerrain() == Terrain.NONE
-				|| scanMapTiles[centerIndex][centerIndex - 1].getTerrain() == Terrain.SAND);
-	}
-
-	public boolean southBlocked(MapTile[][] scanMapTiles, int centerIndex) {
-		return (scanMapTiles[centerIndex][centerIndex + 1].getHasRover()
-				|| scanMapTiles[centerIndex][centerIndex + 1].getTerrain() == Terrain.ROCK
-				|| scanMapTiles[centerIndex][centerIndex + 1].getTerrain() == Terrain.NONE
-				|| scanMapTiles[centerIndex][centerIndex + 1].getTerrain() == Terrain.SAND);
-	}
-
-	public boolean eastBlocked(MapTile[][] scanMapTiles, int centerIndex) {
-		return (scanMapTiles[centerIndex + 1][centerIndex].getHasRover()
-				|| scanMapTiles[centerIndex + 1][centerIndex].getTerrain() == Terrain.ROCK
-				|| scanMapTiles[centerIndex + 1][centerIndex].getTerrain() == Terrain.NONE
-				|| scanMapTiles[centerIndex + 1][centerIndex].getTerrain() == Terrain.SAND);
-	}
-
-	public boolean westBlocked(MapTile[][] scanMapTiles, int centerIndex) {
-		return (scanMapTiles[centerIndex - 1][centerIndex].getHasRover()
-				|| scanMapTiles[centerIndex - 1][centerIndex].getTerrain() == Terrain.ROCK
-				|| scanMapTiles[centerIndex - 1][centerIndex].getTerrain() == Terrain.NONE
-				|| scanMapTiles[centerIndex - 1][centerIndex].getTerrain() == Terrain.SAND);
-	}
-
 	// ################ Support Methods ###########################
 	private void clearReadLineBuffer() throws IOException {
 		while (in.ready()) {

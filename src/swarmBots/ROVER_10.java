@@ -7,9 +7,11 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
 import com.google.gson.reflect.TypeToken;
 import common.Coord;
 import common.MapTile;
@@ -282,6 +284,19 @@ public class ROVER_10 {
 					this.radioactiveLocations.add(radioactiveLocation);
 				duplicate = false;
 			}
+			
+			JSONObject jObj = new JSONObject();
+		    JSONArray jarray = new JSONArray();
+		    try {
+		        for (int i = 0; i < radioactiveLocations.size(); i++) {
+		            JSONObject locObj = new JSONObject();
+		            locObj.put("location", radioactiveLocations.get(i));
+		            jarray.add(locObj);
+		        }
+		        jObj.put("Thong tin", jarray);
+		    } catch (JsonIOException e) {
+		        e.printStackTrace();
+		    }
 		}
 	}
 

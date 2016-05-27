@@ -7,10 +7,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
@@ -93,6 +91,8 @@ public class ROVER_10 {
 		// start moving south
 		Coord currentLoc = null;
 		Coord previousLoc = null;
+		
+		boolean destReached = false;
 
 		// start Rover controller process
 		while (true) {
@@ -136,7 +136,15 @@ public class ROVER_10 {
 			MapTile[][] scanMapTiles = scanMap.getScanMap();
 			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
 			// ***** MOVING *****
-			char dir = live.findPath(currentLoc, targetLoc, RoverDriveType.WHEELS);
+			
+			char dir = ' ';
+			int currentLocDelt = Math.abs(targetLoc.xpos - currentLoc.xpos) + Math.abs(targetLoc.ypos - currentLoc.ypos);
+			if (!(currentLocDelt == 0) && !destReached) {
+				dir = live.findPath(currentLoc, targetLoc, RoverDriveType.WHEELS);
+			} else {
+				destReached = true;
+				dir = live.findPath(currentLoc, startLoc, RoverDriveType.WHEELS);
+			}
 			if (dir != 'U') {
 				out.println("MOVE " + dir);
 			}
@@ -276,20 +284,20 @@ public class ROVER_10 {
 					this.radioactiveLocations.add(radioactiveLocation);
 				duplicate = false;
 			}
+			
+			JSONObject jObj = new JSONObject();
+		    JSONArray jarray = new JSONArray();
+		    try {
+		        for (int i = 0; i < radioactiveLocations.size(); i++) {
+		            JSONObject locObj = new JSONObject();
+		            locObj.put("location", radioactiveLocations.get(i));
+		            jarray.add(locObj);
+		        }
+		        jObj.put("Thong tin", jarray);
+		    } catch (JsonIOException e) {
+		        e.printStackTrace();
+		    }
 		}
-		JSONObject obj = new JSONObject();
-	    JSONArray jarray = new JSONArray();
-	    try {
-	        JSONObject obj1 = new JSONObject();
-	        for (int i = 0; i < radioactiveLocations.size(); i++) {
-	            obj1=new JSONObject();
-	            obj1.put("location", radioactiveLocations.get(i));
-	            jarray.add(obj1);
-	        }
-	        obj1.put("Thong tin", jarray);
-	    } catch (JsonIOException e) {
-	        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-	    }
 	}
 
 	// ################ Support Methods ###########################

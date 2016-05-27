@@ -89,6 +89,8 @@ public class ROVER_10 {
 		// start moving south
 		Coord currentLoc = null;
 		Coord previousLoc = null;
+		
+		boolean destReached = false;
 
 		// start Rover controller process
 		while (true) {
@@ -132,7 +134,15 @@ public class ROVER_10 {
 			MapTile[][] scanMapTiles = scanMap.getScanMap();
 			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
 			// ***** MOVING *****
-			char dir = live.findPath(currentLoc, targetLoc, RoverDriveType.WHEELS);
+			
+			char dir = ' ';
+			int currentLocDelt = Math.abs(targetLoc.xpos - currentLoc.xpos) + Math.abs(targetLoc.ypos - currentLoc.ypos);
+			if (!(currentLocDelt == 0) && !destReached) {
+				dir = live.findPath(currentLoc, targetLoc, RoverDriveType.WHEELS);
+			} else {
+				destReached = true;
+				dir = live.findPath(currentLoc, startLoc, RoverDriveType.WHEELS);
+			}
 			if (dir != 'U') {
 				out.println("MOVE " + dir);
 			}

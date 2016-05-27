@@ -138,8 +138,7 @@ public class ROVER_10 {
 			// ***** MOVING *****
 			
 			char dir = ' ';
-			int currentLocDelt = Math.abs(targetLoc.xpos - currentLoc.xpos) + Math.abs(targetLoc.ypos - currentLoc.ypos);
-			if (!(currentLocDelt == 0) && !destReached) {
+			if (!(currentLoc.equals(targetLoc)) && !destReached) {
 				dir = live.findPath(currentLoc, targetLoc, RoverDriveType.WHEELS);
 			} else {
 				destReached = true;

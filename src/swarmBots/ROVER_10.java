@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -43,8 +44,9 @@ public class ROVER_10 {
 		System.out.println("ROVER_10 rover object constructed");
 		rovername = "ROVER_10";
 		SERVER_ADDRESS = "localhost";
-		// in milliseconds - smaller is faster, but the server will cut connection if too small
-		sleepTime = 300; 
+		// in milliseconds - smaller is faster, but the server will cut
+		// connection if too small
+		sleepTime = 300;
 	}
 
 	/**
@@ -59,7 +61,7 @@ public class ROVER_10 {
 		while (true) {
 			String line = in.readLine();
 			if (line.startsWith("SUBMITNAME")) {
-				out.println(rovername); 
+				out.println(rovername);
 				break;
 			}
 		}
@@ -70,16 +72,16 @@ public class ROVER_10 {
 		if (line.startsWith("TARGET_LOC")) {
 			targetLoc = extractLOC(line);
 		}
-		
+
 		// Get start loc.
 		out.println("START_LOC");
 		line = in.readLine();
 		Coord startLoc = null;
-		
+
 		if (line.startsWith("START_LOC")) {
 			startLoc = extractLOC(line);
 		}
-		
+
 		LiveMap live = new LiveMap(1000, 1000, startLoc, targetLoc);
 
 		// ******** Rover logic *********
@@ -91,8 +93,13 @@ public class ROVER_10 {
 		// start moving south
 		Coord currentLoc = null;
 		Coord previousLoc = null;
-		
+
 		boolean destReached = false;
+		HashMap<Character, Coord> dirIncrs = new HashMap();
+		dirIncrs.put(new Character('N'), new Coord(0, -1));
+		dirIncrs.put(new Character('E'), new Coord(1, 0));
+		dirIncrs.put(new Character('S'), new Coord(0, 1));
+		dirIncrs.put(new Character('W'), new Coord(-1, 0));
 
 		// start Rover controller process
 		while (true) {
@@ -122,28 +129,49 @@ public class ROVER_10 {
 			// ***** do a SCAN *****
 			// System.out.println("ROVER_10 sending SCAN request");
 			this.doScan();
-			// could probably be dynamic, called from an EQUIPMENT call (at start) and fed through RoverToolType.getEnum(String),  but I'm lazy.
-			live.addScanMap(scanMap, currentLoc, RoverToolType.RADIATION_SENSOR, RoverToolType.RANGE_BOOTER); // this																										
+			// could probably be dynamic, called from an EQUIPMENT call (at
+			// start) and fed through RoverToolType.getEnum(String), but I'm
+			// lazy.
+			live.addScanMap(scanMap, currentLoc, RoverToolType.RADIATION_SENSOR, RoverToolType.RANGE_BOOTER); // this
 			live.debugPrintRevealCounts(currentLoc, RoverToolType.RADIATION_SENSOR, RoverToolType.RANGE_BOOTER);
 			scanMap.debugPrintMap();
-			
+
 			// Calculating coordinates and adding the radioactive elements
 			// locations to an new arraylist using a function
 			ArrayList<String> radioactiveFetch = scanMap.radioactiveLocations();
 			radiation_sensor(currentLoc.currentCoord(), radioactiveFetch);
 			List<Coord> radioActCoords = radListToCoords(this.radioactiveLocations);
-						
+
 			MapTile[][] scanMapTiles = scanMap.getScanMap();
 			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
 			// ***** MOVING *****
-			
+
 			char dir = ' ';
-			int currentLocDelt = Math.abs(targetLoc.xpos - currentLoc.xpos) + Math.abs(targetLoc.ypos - currentLoc.ypos);
-			if (!(currentLocDelt == 0) && !destReached) {
+			int targetLocDelta = Math.abs(targetLoc.xpos - currentLoc.xpos)
+					+ Math.abs(targetLoc.ypos - currentLoc.ypos);
+			if (!(targetLocDelta == 0) && !destReached) {
 				dir = live.findPath(currentLoc, targetLoc, RoverDriveType.WHEELS);
-			} else {
-				destReached = true;
-				dir = live.findPath(currentLoc, startLoc, RoverDriveType.WHEELS);
+			} 
+			else {
+				if (destReached == false)
+					destReached = true;
+				
+				int startLocDelta = Math.abs(startLoc.xpos - currentLoc.xpos)
+						+ Math.abs(startLoc.ypos - currentLoc.ypos);
+				
+				if (startLocDelta == 0) {
+					Character debugDir = live.debugRevealCounts(currentLoc, RoverToolType.CHEMICAL_SENSOR,
+							RoverToolType.RANGE_BOOTER);
+					Coord deltaCoord = dirIncrs.get(debugDir);
+					Coord targetCoord = new Coord(currentLoc.xpos + deltaCoord.xpos, currentLoc.ypos + deltaCoord.ypos);
+					dir = live.findPath(currentLoc, targetCoord, RoverDriveType.WHEELS);
+					if (dir == 'U') {
+						destReached = false;
+						dir = live.findPath(currentLoc, targetLoc, RoverDriveType.WHEELS);
+					}
+				} else {
+					dir = live.findPath(currentLoc, startLoc, RoverDriveType.WHEELS);
+				}
 			}
 			if (dir != 'U') {
 				out.println("MOVE " + dir);
@@ -284,19 +312,19 @@ public class ROVER_10 {
 					this.radioactiveLocations.add(radioactiveLocation);
 				duplicate = false;
 			}
-			
+
 			JSONObject jObj = new JSONObject();
-		    JSONArray jarray = new JSONArray();
-		    try {
-		        for (int i = 0; i < radioactiveLocations.size(); i++) {
-		            JSONObject locObj = new JSONObject();
-		            locObj.put("location", radioactiveLocations.get(i));
-		            jarray.add(locObj);
-		        }
-		        jObj.put("Thong tin", jarray);
-		    } catch (JsonIOException e) {
-		        e.printStackTrace();
-		    }
+			JSONArray jarray = new JSONArray();
+			try {
+				for (int i = 0; i < radioactiveLocations.size(); i++) {
+					JSONObject locObj = new JSONObject();
+					locObj.put("location", radioactiveLocations.get(i));
+					jarray.add(locObj);
+				}
+				jObj.put("Thong tin", jarray);
+			} catch (JsonIOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -405,21 +433,22 @@ public class ROVER_10 {
 		}
 		return null;
 	}
+
 	private List<Coord> radListToCoords(List<String> radioactiveLocations) {
 		List<Coord> radioActCoords = new ArrayList<>();
-		
+
 		if (radioactiveLocations != null && !radioactiveLocations.isEmpty()) {
 			for (String loc : radioactiveLocations) {
 				String[] coordArr = loc.split(",");
-				Coord coord = new Coord(Integer.valueOf(coordArr[0]), Integer.valueOf(coordArr[1]));				
+				Coord coord = new Coord(Integer.valueOf(coordArr[0]), Integer.valueOf(coordArr[1]));
 				radioActCoords.add(coord);
 			}
-		}		
+		}
 		return radioActCoords;
 	}
-	
+
 	private void viewRadioactives(List<String> radioactiveLocations) {
-		for (String location: radioactiveLocations) {
+		for (String location : radioactiveLocations) {
 			System.out.println(location);
 		}
 	}

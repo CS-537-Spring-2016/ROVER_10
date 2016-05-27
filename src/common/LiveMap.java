@@ -4,6 +4,12 @@ import enums.Terrain;
 import enums.RoverToolType;
 import enums.RoverDriveType;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
 import common.Communication;
 public class LiveMap extends PlanetMap {
     protected boolean[][][] explored;
@@ -95,6 +101,34 @@ public class LiveMap extends PlanetMap {
         System.out.println("S: " + Integer.toString(this.revealCount(new Coord(pos.xpos, pos.ypos+1), tool1, tool2)));
         System.out.println("W: " + Integer.toString(this.revealCount(new Coord(pos.xpos-1, pos.ypos), tool1, tool2)));
     }
+    
+    //"tries" all four cardinal directions and prints out how much would be revealed
+    public Character debugRevealCounts(Coord pos, RoverToolType tool1, RoverToolType tool2) {
+    	HashMap<Character, Integer> revealCountsHash = new HashMap();
+    	revealCountsHash.put(new Character('N'), this.revealCount(new Coord(pos.xpos, pos.ypos - 1), tool1, tool2));
+    	revealCountsHash.put(new Character('E'), this.revealCount(new Coord(pos.xpos + 1, pos.ypos), tool1, tool2));
+    	revealCountsHash.put(new Character('S'), this.revealCount(new Coord(pos.xpos, pos.ypos + 1), tool1, tool2));
+    	revealCountsHash.put(new Character('W'), this.revealCount(new Coord(pos.xpos - 1, pos.ypos), tool1, tool2));
+    	
+    	Iterator<Map.Entry<Character, Integer>> i = revealCountsHash.entrySet().iterator();
+    	int max = 0;
+    	Character dir = 'N';
+    	while (i.hasNext()) {
+    		Map.Entry<Character, Integer> me = (Map.Entry<Character, Integer>) i.next();
+    		max = Math.max(max, (int) me.getValue());
+    	}
+    	
+    	Set<Character> dirKeys = revealCountsHash.keySet();
+    	for (Character cDir : dirKeys) {
+    		if (revealCountsHash.get(cDir) == max) {
+    			dir = cDir;
+    		}
+    		break;
+    	}
+    	System.out.println("Go to: " + dir);
+    	return dir;    	   	    	
+    }
+    
     //A* pathfinder
     public char findPath(Coord start, Coord dest, RoverDriveType drive) {
         ArrayList<Coord> openSet = new ArrayList<Coord>();

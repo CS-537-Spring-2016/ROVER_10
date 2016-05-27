@@ -8,8 +8,12 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
 import com.google.gson.reflect.TypeToken;
 import common.Coord;
 import common.MapTile;
@@ -273,6 +277,19 @@ public class ROVER_10 {
 				duplicate = false;
 			}
 		}
+		JSONObject obj = new JSONObject();
+	    JSONArray jarray = new JSONArray();
+	    try {
+	        JSONObject obj1 = new JSONObject();
+	        for (int i = 0; i < radioactiveLocations.size(); i++) {
+	            obj1=new JSONObject();
+	            obj1.put("location", radioactiveLocations.get(i));
+	            jarray.add(obj1);
+	        }
+	        obj1.put("Thong tin", jarray);
+	    } catch (JsonIOException e) {
+	        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+	    }
 	}
 
 	// ################ Support Methods ###########################

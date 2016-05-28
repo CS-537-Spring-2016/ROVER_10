@@ -71,13 +71,21 @@ public class ROVER_10 {
 			targetLoc = extractLOC(line);
 		}
 		
+		targetLoc = new Coord(20, 6);
+		
+		out.println("LOC");
+		line = in.readLine();
+		if (line == null) {
+			System.out.println("ROVER_10 check connection to server");
+			line = "";
+		}
 		// Get start loc.
 		out.println("START_LOC");
 		line = in.readLine();
 		Coord startLoc = null;
 		
 		if (line.startsWith("START_LOC")) {
-			startLoc = extractLOC(line);
+			startLoc = extractLOC(line);			
 		}
 		
 		LiveMap live = new LiveMap(1000, 1000, startLoc, targetLoc);
@@ -156,7 +164,11 @@ public class ROVER_10 {
 			if (line.startsWith("LOC")) {
 				currentLoc = extractLOC(line);
 			}
-
+				
+			if (currentLoc.equals(startLoc)) {
+				destReached = false;
+			}
+			
 			stuck = currentLoc.equals(previousLoc);
 
 			System.out.println("ROVER_10 blocked test " + blocked);

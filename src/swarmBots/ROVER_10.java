@@ -4,21 +4,20 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonIOException;
 import com.google.gson.reflect.TypeToken;
 import common.Coord;
-import common.MapTile;
 import common.ScanMap;
 import common.LiveMap;
-import enums.Terrain;
+import common.MapTile;
 import enums.RoverToolType;
+import enums.Terrain;
 import enums.RoverDriveType;
 
 /**
@@ -43,8 +42,9 @@ public class ROVER_10 {
 		System.out.println("ROVER_10 rover object constructed");
 		rovername = "ROVER_10";
 		SERVER_ADDRESS = "localhost";
-		// in milliseconds - smaller is faster, but the server will cut connection if too small
-		sleepTime = 300; 
+		// in milliseconds - smaller is faster, but the server will cut
+		// connection if too small
+		sleepTime = 300;
 	}
 
 	/**
@@ -59,7 +59,7 @@ public class ROVER_10 {
 		while (true) {
 			String line = in.readLine();
 			if (line.startsWith("SUBMITNAME")) {
-				out.println(rovername); 
+				out.println(rovername);
 				break;
 			}
 		}
@@ -70,16 +70,16 @@ public class ROVER_10 {
 		if (line.startsWith("TARGET_LOC")) {
 			targetLoc = extractLOC(line);
 		}
-		
+
 		// Get start loc.
 		out.println("START_LOC");
 		line = in.readLine();
 		Coord startLoc = null;
-		
+
 		if (line.startsWith("START_LOC")) {
 			startLoc = extractLOC(line);
 		}
-		
+
 		LiveMap live = new LiveMap(1000, 1000, startLoc, targetLoc);
 
 		// ******** Rover logic *********
@@ -91,7 +91,7 @@ public class ROVER_10 {
 		// start moving south
 		Coord currentLoc = null;
 		Coord previousLoc = null;
-		
+
 		boolean destReached = false;
 
 		// start Rover controller process
@@ -122,21 +122,17 @@ public class ROVER_10 {
 			// ***** do a SCAN *****
 			// System.out.println("ROVER_10 sending SCAN request");
 			this.doScan();
-			// could probably be dynamic, called from an EQUIPMENT call (at start) and fed through RoverToolType.getEnum(String),  but I'm lazy.
-			live.addScanMap(scanMap, currentLoc, RoverToolType.RADIATION_SENSOR, RoverToolType.RANGE_BOOTER); // this																										
+			// could probably be dynamic, called from an EQUIPMENT call (at
+			// start) and fed through RoverToolType.getEnum(String), but I'm
+			// lazy.
+			live.addScanMap(scanMap, currentLoc, RoverToolType.RADIATION_SENSOR, RoverToolType.RANGE_BOOTER); // this
 			live.debugPrintRevealCounts(currentLoc, RoverToolType.RADIATION_SENSOR, RoverToolType.RANGE_BOOTER);
 			scanMap.debugPrintMap();
-			
-			// Calculating coordinates and adding the radioactive elements
-			// locations to an new arraylist using a function
-			ArrayList<String> radioactiveFetch = scanMap.radioactiveLocations();
-			radiation_sensor(currentLoc.currentCoord(), radioactiveFetch);
-			List<Coord> radioActCoords = radListToCoords(this.radioactiveLocations);
-						
-			MapTile[][] scanMapTiles = scanMap.getScanMap();
-			int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
+
+			radiation_sensor(currentLoc.currentCoord());
+
 			// ***** MOVING *****
-			
+
 			char dir = ' ';
 			if (!(currentLoc.equals(targetLoc)) && !destReached) {
 				dir = live.findPath(currentLoc, targetLoc, RoverDriveType.WHEELS);
@@ -165,138 +161,31 @@ public class ROVER_10 {
 		}
 	}
 
-	// populates this.radioactiveLocations w/ loc's of radioactive elements.
-	private void radiation_sensor(String currentLoc, ArrayList<String> radioactiveFetch) {
+	private void radiation_sensor(String currentLoc) throws IOException {
 
-		// declaring variables for current x & y , chemical x & y
 		int x_Current = 0, y_Current = 0, x_radioactiveelements = 0, y_radioactiveelements = 0;
 
-		boolean duplicate = false;
-
-		String radioactiveLocation = null;
-
-		// extracting the current coordinates and putting into integer variables
 		String[] currentCoordinates = currentLoc.split(" ");
 		x_Current = Integer.parseInt(currentCoordinates[0]);
 		y_Current = Integer.parseInt(currentCoordinates[1]);
 
-		// iterating the radioactiveelementFetch array list for all the
-		// radioactive locations
-		for (String s : radioactiveFetch) {
-			// extracting the radioactive coordinates and putting into integer
-			// variables
-			String[] radioactiveCoordinates = s.split(" ");
-			x_radioactiveelements = Integer.parseInt(radioactiveCoordinates[0]);
-			y_radioactiveelements = Integer.parseInt(radioactiveCoordinates[1]);
+		MapTile[][] locArray = null;
+		for(int i = x_Current-5;i<=x_Current+5;i++){
+			for(int j=y_Current-5;j<=y_Current+5;j++){
+				if(x_radioactiveelements == i && y_radioactiveelements == j){
+					if(locArray[i][j].getScience().toString().equals("RADIOACTIVE")){
+					JSONObject obj = new JSONObject();
 
-			// checking the x value of radioactive coordinate in the scan map
-			// least will be 0 and max will 10 while 5 will be median
-			switch (x_radioactiveelements) {
-			case 0:
-				x_radioactiveelements = x_Current - 5;
-				break;
-			case 1:
-				x_radioactiveelements = x_Current - 4;
-				break;
-			case 2:
-				x_radioactiveelements = x_Current - 3;
-				break;
-			case 3:
-				x_radioactiveelements = x_Current - 2;
-				break;
-			case 4:
-				x_radioactiveelements = x_Current - 1;
-				break;
-			case 5:
-				x_radioactiveelements = x_Current;
-				break;
-			case 6:
-				x_radioactiveelements = x_Current + 1;
-				break;
-			case 7:
-				x_radioactiveelements = x_Current + 2;
-				break;
-			case 8:
-				x_radioactiveelements = x_Current + 3;
-				break;
-			case 9:
-				x_radioactiveelements = x_Current + 4;
-				break;
-			case 10:
-				x_radioactiveelements = x_Current + 5;
-				break;
-			}
+					obj.put("x_radioactiveelements", x_radioactiveelements);
+					obj.put("y_radioactiveelements", y_radioactiveelements);
 
-			// checking the y value of radioactive coordinate in the scan map
-			// least will be 0 and max will 10 while 5 will be median
-			switch (y_radioactiveelements) {
-			case 0:
-				y_radioactiveelements = y_Current - 5;
-				break;
-			case 1:
-				y_radioactiveelements = y_Current - 4;
-				break;
-			case 2:
-				y_radioactiveelements = y_Current - 3;
-				break;
-			case 3:
-				y_radioactiveelements = y_Current - 2;
-				break;
-			case 4:
-				y_radioactiveelements = y_Current - 1;
-				break;
-			case 5:
-				y_radioactiveelements = y_Current;
-				break;
-			case 6:
-				y_radioactiveelements = y_Current + 1;
-				break;
-			case 7:
-				y_radioactiveelements = y_Current + 2;
-				break;
-			case 8:
-				y_radioactiveelements = y_Current + 3;
-				break;
-			case 9:
-				y_radioactiveelements = y_Current + 4;
-				break;
-			case 10:
-				y_radioactiveelements = y_Current + 5;
-				break;
-			}
-
-			// checking whether coordinates are not negative
-			if (x_radioactiveelements >= 0 && y_radioactiveelements >= 0) {
-				// creating a string form of coordinates to store in arraylist
-				radioactiveLocation = x_radioactiveelements + "," + y_radioactiveelements;
-				// iterating through existing coordinates arraylist for
-				// duplicates
-				for (String loc : this.radioactiveLocations) {
-					if (loc.equals(radioactiveLocation)) {
-						duplicate = true;
-						break;
+					StringWriter out = new StringWriter();
+					obj.writeJSONString(out);
 					}
 				}
-
-				// adding to arraylist if no duplicates found above
-				if (!duplicate)
-					this.radioactiveLocations.add(radioactiveLocation);
-				duplicate = false;
 			}
-			
-			JSONObject jObj = new JSONObject();
-		    JSONArray jarray = new JSONArray();
-		    try {
-		        for (int i = 0; i < radioactiveLocations.size(); i++) {
-		            JSONObject locObj = new JSONObject();
-		            locObj.put("location", radioactiveLocations.get(i));
-		            jarray.add(locObj);
-		        }
-		        jObj.put("Thong tin", jarray);
-		    } catch (JsonIOException e) {
-		        e.printStackTrace();
-		    }
 		}
+
 	}
 
 	// ################ Support Methods ###########################
@@ -404,21 +293,22 @@ public class ROVER_10 {
 		}
 		return null;
 	}
+
 	private List<Coord> radListToCoords(List<String> radioactiveLocations) {
 		List<Coord> radioActCoords = new ArrayList<>();
-		
+
 		if (radioactiveLocations != null && !radioactiveLocations.isEmpty()) {
 			for (String loc : radioactiveLocations) {
 				String[] coordArr = loc.split(",");
-				Coord coord = new Coord(Integer.valueOf(coordArr[0]), Integer.valueOf(coordArr[1]));				
+				Coord coord = new Coord(Integer.valueOf(coordArr[0]), Integer.valueOf(coordArr[1]));
 				radioActCoords.add(coord);
 			}
-		}		
+		}
 		return radioActCoords;
 	}
-	
+
 	private void viewRadioactives(List<String> radioactiveLocations) {
-		for (String location: radioactiveLocations) {
+		for (String location : radioactiveLocations) {
 			System.out.println(location);
 		}
 	}

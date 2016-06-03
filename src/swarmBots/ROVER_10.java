@@ -69,6 +69,7 @@ public class ROVER_10 {
 		Coord targetLoc = null;
 		if (line.startsWith("TARGET_LOC")) {
 			targetLoc = extractLOC(line);
+			targetLoc = new Coord(28, 9);
 		}
 		
 		out.println("LOC");
@@ -89,9 +90,10 @@ public class ROVER_10 {
 		LiveMap live = new LiveMap(1000, 1000, startLoc, targetLoc);
 		
 		Coord currentLoc = null;
-		boolean destReached = false;
-
-		// start Rover controller process
+		boolean goldMineReached = false;
+		boolean unknownMineReached = true;
+		
+		Coord unknownTargetLoc = null;
 		while (true) {
 			// **** location call ****
 			out.println("LOC");
@@ -105,45 +107,107 @@ public class ROVER_10 {
 			}
 			
 			System.out.println("ROVER_10 currentLoc at start: " + currentLoc);
-
-			// **** get equipment listing ****
-			ArrayList<String> equipment = new ArrayList<String>();
-			equipment = getEquipment();
-			System.out.println("ROVER_10 equipment list results " + equipment + "\n");
-
+			
+			//we've reached our primary loc, so no need to consider it anymore.
+			if (currentLoc.equals(targetLoc)) {
+				goldMineReached = true;
+				System.out.println("reached");
+			}
+			
+			if (currentLoc.equals(unknownTargetLoc)) {
+				System.out.println("Indeed, current Loc equals unknownTargetLoc");
+//				Thread.sleep(2000);
+				unknownMineReached = true;
+			}
+			
 			this.doScan();
 			live.addScanMap(scanMap, currentLoc, RoverToolType.RADIATION_SENSOR, RoverToolType.RANGE_BOOTER); // this																										
-			live.debugPrintRevealCounts(currentLoc, RoverToolType.RADIATION_SENSOR, RoverToolType.RANGE_BOOTER);
 			scanMap.debugPrintMap();
 			
 			radiation_sensor(currentLoc.currentCoord());
 			
 			char dir = ' ';
-			if (!(currentLoc.equals(targetLoc)) && !destReached) {
+			if (!goldMineReached) {
+				System.out.println("Target loc: " + targetLoc);
+				//get dir to targetLoc so that goldMineReached will be true, eventually
 				dir = live.findPath(currentLoc, targetLoc, RoverDriveType.WHEELS);
+			}
+			else if (unknownMineReached){
+				System.out.println("Det new loc");
+//				Thread.sleep(5000);
+				unknownTargetLoc = determineNextCoord(live, currentLoc);
+				dir = live.findPath(currentLoc, unknownTargetLoc, RoverDriveType.WHEELS);
+				unknownMineReached = false;
 			} else {
-				destReached = true;
-				dir = live.findPath(currentLoc, startLoc, RoverDriveType.WHEELS);
+				System.out.println("Still trying to go to : " + unknownTargetLoc.toString());
+//				Thread.sleep(1000);
+				dir = live.findPath(currentLoc, unknownTargetLoc, RoverDriveType.WHEELS);
+				while (dir == 'U') {
+					unknownTargetLoc = determineNextCoord(live, currentLoc);
+					dir = live.findPath(currentLoc, unknownTargetLoc, RoverDriveType.WHEELS);
+				}
 			}
 			if (dir != 'U') {
 				out.println("MOVE " + dir);
 			}
-			out.println("LOC");
-			line = in.readLine();
-			if (line == null) {
-				System.out.println("ROVER_10 check connection to server");
-				line = "";
-			}
-			if (line.startsWith("LOC")) {
-				currentLoc = extractLOC(line);
-			}
-				
-			if ((Math.abs(currentLoc.xpos - startLoc.xpos) + Math.abs(currentLoc.ypos - startLoc.ypos)) <= 5) {
-				destReached = false;
-			}
+			System.out.println("Livepath dir: " + dir); 
+			
+						
 			Thread.sleep(sleepTime);
 			System.out.println("ROVER_10 ------------ bottom process control --------------");
 		}
+	}
+	
+	public Coord determineNextCoord(LiveMap live, Coord currentLoc) {
+		char[] cardinalDirs = new char[4];
+		cardinalDirs[0] = 'S';
+		cardinalDirs[1] = 'N';
+		cardinalDirs[2] = 'W';
+		cardinalDirs[3] = 'E';
+		Coord targetCoord = null;
+		for (int i = 0; i < cardinalDirs.length; i++) {
+			char dir = cardinalDirs[i];
+			for (int j = 1; j <= 7; j++) {
+				System.out.println("Try to go " + dir + " " + j + " times...");
+
+				targetCoord = calcTargetLoc(currentLoc, dir, j);
+
+				char potentialDir = live.findPath(currentLoc, targetCoord, RoverDriveType.WHEELS);
+				if (potentialDir != 'U') {
+					System.out.println("Target dest is reachble.., going to " + targetCoord.toString());
+					return targetCoord;
+				}
+				System.out.println("After return targetCoord");
+			}
+			System.out.println("After inner for loop...");
+		}
+		return targetCoord;
+	}
+	
+	public Coord calcTargetLoc(Coord currentLoc, char dir, int j) {
+		char targetDir = dir;
+		Coord deltaCoord = null;
+		Coord targetCoord;
+		switch (targetDir) {
+		case 'N':
+			deltaCoord = new Coord(0, -1 * j);
+			break;
+		case 'W':
+			deltaCoord = new Coord(-1 * j, 0);
+			break;
+		case 'S':
+			deltaCoord = new Coord(0, 1 * j);
+			break;
+		case 'E':
+			deltaCoord = new Coord(1 * j, 0);
+			break;
+		}
+		
+		targetCoord = new Coord(currentLoc.xpos + deltaCoord.xpos, currentLoc.ypos + deltaCoord.ypos);
+		System.out.println("currentloc: " + currentLoc.toString());
+		System.out.println("targetCoord: " + targetCoord.toString());
+//		Thread.sleep(5000);
+		return targetCoord;
 	}
 
 	private void radiation_sensor(String currentLoc) throws IOException {

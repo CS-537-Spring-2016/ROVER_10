@@ -45,7 +45,6 @@ public class ROVER_10 {
 	public ROVER_10() {
 		System.out.println("ROVER_10 rover object constructed");
 		rovername = "ROVER_10";
-		SERVER_ADDRESS = "localhost";
 		// in milliseconds - smaller is faster, but the server will cut connection if too small
 		sleepTime = 300; 
 	}

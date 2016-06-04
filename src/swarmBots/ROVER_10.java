@@ -8,6 +8,8 @@ import java.io.StringWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import com.google.gson.Gson;
@@ -69,6 +71,7 @@ public class ROVER_10 {
 		Coord targetLoc = null;
 		if (line.startsWith("TARGET_LOC")) {
 			targetLoc = extractLOC(line);
+//			targetLoc = new Coord(12, 18);
 		}
 		
 		out.println("LOC");
@@ -90,8 +93,11 @@ public class ROVER_10 {
 		
 		Coord currentLoc = null;
 		boolean destReached = false;
+		char dir = ' ';
+		int counter = 1;
 
-		// start Rover controller process
+		char[] dirs = new char[]{'N', 'E', 'S', 'W'};
+		Random rand = new Random();
 		while (true) {
 			// **** location call ****
 			out.println("LOC");
@@ -104,7 +110,11 @@ public class ROVER_10 {
 				currentLoc = extractLOC(line);
 			}
 			
-			System.out.println("ROVER_10 currentLoc at start: " + currentLoc);
+			if (currentLoc.equals(targetLoc)) {
+				destReached = true;
+			}
+			
+			System.out.println("Current Loc: " + currentLoc.toString());
 
 			// **** get equipment listing ****
 			ArrayList<String> equipment = new ArrayList<String>();
@@ -118,33 +128,151 @@ public class ROVER_10 {
 			
 			radiation_sensor(currentLoc.currentCoord());
 			
-			char dir = ' ';
-			if (!(currentLoc.equals(targetLoc)) && !destReached) {
+			if (!destReached) {
 				dir = live.findPath(currentLoc, targetLoc, RoverDriveType.WHEELS);
 			} else {
-				destReached = true;
-				dir = live.findPath(currentLoc, startLoc, RoverDriveType.WHEELS);
+				if (counter % 20 == 0) {
+					List<String> dirsCons = new ArrayList<>();
+					char dirOpposite = getOpposite(dir);
+					for (int i = 0; i < dirs.length; i++) {
+						if (dirs[i] != dirOpposite) {
+							dirsCons.add(String.valueOf(dirs[i]));
+						}
+					}
+					dir = dirsCons.get(rand.nextInt(3)).charAt(0);					
+				}
+				counter++;
+				MapTile[][] scanMapTiles = scanMap.getScanMap();
+				int centerIndex = (scanMap.getEdgeSize() - 1) / 2;
+				System.out.println(dir);
+				switch (dir) {
+				case 'N':
+					if (northBlocked(scanMapTiles, centerIndex)) {
+						dir = resolveNorth(scanMapTiles, centerIndex);
+					}
+					break;
+				case 'S':
+					if (southBlocked(scanMapTiles, centerIndex)) {
+						dir = resolveSouth(scanMapTiles, centerIndex);
+					}
+					break;
+				case 'E':
+					System.out.println("E");
+					if (eastBlocked(scanMapTiles, centerIndex)) {
+						dir = resolveEast(scanMapTiles, centerIndex);
+					}
+					break;
+				case 'W':
+					System.out.println("W");
+					if (westBlocked(scanMapTiles, centerIndex)) {
+						dir = resolveWest(scanMapTiles, centerIndex);
+					}
+					break;
+				}
+				System.out.println("Going: " + dir);
 			}
 			if (dir != 'U') {
 				out.println("MOVE " + dir);
 			}
-			out.println("LOC");
-			line = in.readLine();
-			if (line == null) {
-				System.out.println("ROVER_10 check connection to server");
-				line = "";
-			}
-			if (line.startsWith("LOC")) {
-				currentLoc = extractLOC(line);
-			}
 				
-			if ((Math.abs(currentLoc.xpos - startLoc.xpos) + Math.abs(currentLoc.ypos - startLoc.ypos)) <= 5) {
-				destReached = false;
-			}
 			Thread.sleep(sleepTime);
 			System.out.println("ROVER_10 ------------ bottom process control --------------");
 		}
 	}
+	
+	public char getOpposite(char dir) {
+		char opposite = ' ';
+		switch (dir) {
+		case 'N':
+			opposite = 'S';
+			break;
+		case 'S':
+			opposite = 'N';
+			break;
+		case 'E':
+			opposite = 'W';
+			break;
+		case 'W':
+			opposite = 'E';
+			break;
+		}
+		System.out.println("Opposite of " + dir + " is " + opposite);
+		return opposite;
+	}
+	
+	public char resolveNorth(MapTile[][] scanMapTiles, int centerIndex) {
+		String currentDir = "N";
+		if (!eastBlocked(scanMapTiles, centerIndex))
+			currentDir = "E";
+		else if (!westBlocked(scanMapTiles, centerIndex))
+			currentDir = "W";
+		else
+			currentDir = "S";
+		return currentDir.charAt(0);
+	}
+
+	public char resolveSouth(MapTile[][] scanMapTiles, int centerIndex) {
+		String currentDir = "S";
+		if (!westBlocked(scanMapTiles, centerIndex))
+			currentDir = "W";
+		else if (!eastBlocked(scanMapTiles, centerIndex))
+			currentDir = "E";
+		else {
+			currentDir = "N";
+		}
+		return currentDir.charAt(0);
+	}
+
+	public char resolveEast(MapTile[][] scanMapTiles, int centerIndex) {
+		String currentDir = "E";
+		if (!southBlocked(scanMapTiles, centerIndex))
+			currentDir = "S";
+		else if (!northBlocked(scanMapTiles, centerIndex))
+			currentDir = "N";
+		else
+			currentDir = "W";
+		return currentDir.charAt(0);
+	}
+
+	public char resolveWest(MapTile[][] scanMapTiles, int centerIndex) {
+		String currentDir = "W";
+		if (!northBlocked(scanMapTiles, centerIndex))
+			currentDir = "N";
+		else if (!southBlocked(scanMapTiles, centerIndex))
+			currentDir = "S";
+		else
+			currentDir = "E";
+		return currentDir.charAt(0);
+	}
+	
+	public boolean northBlocked(MapTile[][] scanMapTiles, int centerIndex) {
+		return (scanMapTiles[centerIndex][centerIndex - 1].getHasRover()
+				|| scanMapTiles[centerIndex][centerIndex - 1].getTerrain() == Terrain.ROCK
+				|| scanMapTiles[centerIndex][centerIndex - 1].getTerrain() == Terrain.NONE
+				|| scanMapTiles[centerIndex][centerIndex - 1].getTerrain() == Terrain.SAND);
+	}
+
+	public boolean southBlocked(MapTile[][] scanMapTiles, int centerIndex) {
+		return (scanMapTiles[centerIndex][centerIndex + 1].getHasRover()
+				|| scanMapTiles[centerIndex][centerIndex + 1].getTerrain() == Terrain.ROCK
+				|| scanMapTiles[centerIndex][centerIndex + 1].getTerrain() == Terrain.NONE
+				|| scanMapTiles[centerIndex][centerIndex + 1].getTerrain() == Terrain.SAND);
+	}
+
+	public boolean eastBlocked(MapTile[][] scanMapTiles, int centerIndex) {
+		return (scanMapTiles[centerIndex + 1][centerIndex].getHasRover()
+				|| scanMapTiles[centerIndex + 1][centerIndex].getTerrain() == Terrain.ROCK
+				|| scanMapTiles[centerIndex + 1][centerIndex].getTerrain() == Terrain.NONE
+				|| scanMapTiles[centerIndex + 1][centerIndex].getTerrain() == Terrain.SAND);
+	}
+
+	public boolean westBlocked(MapTile[][] scanMapTiles, int centerIndex) {
+		return (scanMapTiles[centerIndex - 1][centerIndex].getHasRover()
+				|| scanMapTiles[centerIndex - 1][centerIndex].getTerrain() == Terrain.ROCK
+				|| scanMapTiles[centerIndex - 1][centerIndex].getTerrain() == Terrain.NONE
+				|| scanMapTiles[centerIndex - 1][centerIndex].getTerrain() == Terrain.SAND);
+	}
+	
 
 	private void radiation_sensor(String currentLoc) throws IOException {
 

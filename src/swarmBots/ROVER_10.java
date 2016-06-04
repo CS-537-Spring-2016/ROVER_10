@@ -37,7 +37,7 @@ public class ROVER_10 {
 	String rovername;
 	ScanMap scanMap;
 	int sleepTime;
-	String SERVER_ADDRESS = "localhost";
+	String SERVER_ADDRESS = "192.168.1.106";
 	static final int SWARM_SERVER_PORT_ADDRESS = 9537;
 
 	ArrayList<String> radioactiveLocations = new ArrayList<String>();

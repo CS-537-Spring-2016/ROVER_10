@@ -161,6 +161,9 @@ public class LiveMap extends PlanetMap {
     }
     public boolean blocked(Coord pos, RoverDriveType drive) {
         Terrain ter = this.getTile(pos).getTerrain();
+		if(this.getTile(pos).getHasRover()) {
+			return true;
+		}
         if(ter == Terrain.NONE) {
             return true;
         }

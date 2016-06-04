@@ -37,8 +37,8 @@ public class LiveMap extends PlanetMap {
                 }
             }
         }
-		String url = "http://23.251.155.186:3000/api";
-		this.com = new Communication(url, "ROVER_10", "0FSj7Pn23t");
+		String url = "http://192.168.1.104:3000/api";
+		this.com = new Communication(url, "ROVER_10", "gz5YhL70a2");
     }
     //adds a scanmap to the livemap.
     public void addScanMap(ScanMap scan, Coord centerpos, RoverToolType tool1, RoverToolType tool2) {
